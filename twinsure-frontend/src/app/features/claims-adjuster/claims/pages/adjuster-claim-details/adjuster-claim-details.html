@@ -1,0 +1,817 @@
+<section class="mx-auto max-w-7xl">
+  <header class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <a
+        routerLink="/claims-adjuster/claims"
+        class="text-sm font-semibold text-blue-700 hover:text-blue-800"
+      >
+        Back to assigned claims
+      </a>
+
+      <p class="mt-5 text-sm font-semibold uppercase tracking-widest text-blue-700">
+        Claims Adjuster review
+      </p>
+
+      <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+        {{ claim()?.claimNumber ?? 'Claim review' }}
+      </h1>
+    </div>
+
+    <button
+      type="button"
+      class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+      [disabled]="loading() || contextLoading()"
+      (click)="reloadWorkspace()"
+    >
+      {{ loading() || contextLoading() ? 'Refreshing...' : 'Refresh review' }}
+    </button>
+  </header>
+
+  @if (error()) {
+    <div
+      class="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      role="alert"
+    >
+      {{ error() }}
+    </div>
+  }
+
+  @if (loading() && !details()) {
+    <section class="mt-6 animate-pulse space-y-5" aria-label="Loading claim details">
+      <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div class="h-7 w-64 rounded bg-slate-200"></div>
+
+        <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div class="h-24 rounded-2xl bg-slate-100"></div>
+
+          <div class="h-24 rounded-2xl bg-slate-100"></div>
+
+          <div class="h-24 rounded-2xl bg-slate-100"></div>
+
+          <div class="h-24 rounded-2xl bg-slate-100"></div>
+        </div>
+      </div>
+
+      <div class="grid gap-5 lg:grid-cols-2">
+        <div class="h-72 rounded-3xl border border-slate-200 bg-white"></div>
+
+        <div class="h-72 rounded-3xl border border-slate-200 bg-white"></div>
+      </div>
+    </section>
+  } @else if (details()) {
+    <article class="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div
+        class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 bg-slate-50 px-6 py-5 sm:px-8"
+      >
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Claim ID {{ claim()!.claimId }}
+          </p>
+
+          <h2 class="mt-1 text-xl font-semibold text-slate-900">
+            {{ claim()!.claimNumber }}
+          </h2>
+
+          <p class="mt-1 text-sm text-slate-500">
+            Customer {{ claim()!.customerId }} · AI Twin {{ claim()!.twinId }} · Policy
+            {{ claim()!.policyId }}
+          </p>
+        </div>
+
+        <span
+          class="rounded-full px-3 py-1 text-xs font-semibold"
+          [class]="statusClasses(claim()!.status)"
+        >
+          {{ statusLabel(claim()!.status) }}
+        </span>
+      </div>
+
+      <dl class="grid gap-0 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="border-b border-slate-200 p-6 sm:px-8">
+          <dt class="text-sm text-slate-500">Claimed amount</dt>
+
+          <dd class="mt-2 text-xl font-bold text-slate-900">
+            {{ claim()!.claimedAmount | currency: 'INR' : 'symbol' : '1.2-2' }}
+          </dd>
+        </div>
+
+        <div class="border-b border-slate-200 p-6 sm:border-l sm:px-8">
+          <dt class="text-sm text-slate-500">Approved amount</dt>
+
+          <dd class="mt-2 text-xl font-bold text-slate-900">
+            @if (claim()!.approvedAmount !== null) {
+              {{ claim()!.approvedAmount | currency: 'INR' : 'symbol' : '1.2-2' }}
+            } @else {
+              <span class="text-base font-semibold text-slate-500"> Not decided </span>
+            }
+          </dd>
+        </div>
+
+        <div class="border-b border-slate-200 p-6 xl:border-l xl:px-8">
+          <dt class="text-sm text-slate-500">Submitted</dt>
+
+          <dd class="mt-2 font-semibold text-slate-900">
+            {{ claim()!.submittedAt | date: 'medium' }}
+          </dd>
+        </div>
+
+        <div class="border-b border-slate-200 p-6 sm:border-l sm:px-8">
+          <dt class="text-sm text-slate-500">Latest activity</dt>
+
+          <dd class="mt-2 font-semibold text-slate-900">
+            {{ claim()!.updatedAt | date: 'medium' }}
+          </dd>
+        </div>
+      </dl>
+    </article>
+
+    <section class="mt-6 grid gap-6 lg:grid-cols-2">
+      <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-blue-700">
+              Reported event
+            </p>
+
+            <h2 class="mt-1 text-xl font-semibold text-slate-900">Incident details</h2>
+          </div>
+
+          <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+            {{ formatLabel(incident()!.incidentType) }}
+          </span>
+        </div>
+
+        <p class="mt-5 text-sm leading-6 text-slate-600">
+          {{ incident()!.description }}
+        </p>
+
+        <dl class="mt-6 grid gap-3 sm:grid-cols-2">
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <dt class="text-xs uppercase tracking-wide text-slate-500">Reported loss</dt>
+
+            <dd class="mt-2 font-bold text-slate-900">
+              {{ incident()!.lossAmount | currency: 'INR' : 'symbol' : '1.2-2' }}
+            </dd>
+          </div>
+
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <dt class="text-xs uppercase tracking-wide text-slate-500">AI action</dt>
+
+            <dd class="mt-2 font-semibold text-slate-900">
+              {{ incident()!.actionId }}
+            </dd>
+          </div>
+
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <dt class="text-xs uppercase tracking-wide text-slate-500">Action occurred</dt>
+
+            <dd class="mt-2 font-semibold text-slate-900">
+              {{ incident()!.actionOccurredAt | date: 'medium' }}
+            </dd>
+          </div>
+
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <dt class="text-xs uppercase tracking-wide text-slate-500">Incident reported</dt>
+
+            <dd class="mt-2 font-semibold text-slate-900">
+              {{ incident()!.reportedAt | date: 'medium' }}
+            </dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-blue-700">
+              Automatic calculation
+            </p>
+
+            <h2 class="mt-1 text-xl font-semibold text-slate-900">Review context</h2>
+          </div>
+
+          @if (reviewContext()) {
+            <span
+              class="rounded-full px-3 py-1 text-xs font-semibold"
+              [class.bg-emerald-100]="reviewContext()!.eligible"
+              [class.text-emerald-700]="reviewContext()!.eligible"
+              [class.bg-red-100]="!reviewContext()!.eligible"
+              [class.text-red-700]="!reviewContext()!.eligible"
+            >
+              {{ reviewContext()!.eligible ? 'Automatically eligible' : 'Eligibility failed' }}
+            </span>
+          }
+        </div>
+
+        @if (contextLoading()) {
+          <div class="mt-6 animate-pulse space-y-3">
+            <div class="h-16 rounded-2xl bg-slate-100"></div>
+
+            <div class="h-16 rounded-2xl bg-slate-100"></div>
+
+            <div class="h-16 rounded-2xl bg-slate-100"></div>
+          </div>
+        } @else if (contextError()) {
+          <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <p class="text-sm font-semibold text-amber-950">Review calculation unavailable</p>
+
+            <p class="mt-2 text-sm leading-6 text-amber-800">
+              {{ contextError() }}
+            </p>
+
+            <button
+              type="button"
+              class="mt-4 rounded-xl border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-100"
+              (click)="reloadWorkspace()"
+            >
+              Retry calculation
+            </button>
+          </div>
+        } @else if (reviewContext()) {
+          <dl class="mt-6 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs uppercase tracking-wide text-slate-500">Gross eligible</dt>
+
+              <dd class="mt-2 font-bold text-slate-900">
+                {{ reviewContext()!.grossEligibleAmount | currency: 'INR' : 'symbol' : '1.2-2' }}
+              </dd>
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs uppercase tracking-wide text-slate-500">Deductible</dt>
+
+              <dd class="mt-2 font-bold text-slate-900">
+                {{ reviewContext()!.deductibleApplied | currency: 'INR' : 'symbol' : '1.2-2' }}
+              </dd>
+            </div>
+
+            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:col-span-2">
+              <dt class="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                Maximum payable
+              </dt>
+
+              <dd class="mt-2 text-2xl font-bold text-emerald-950">
+                {{ reviewContext()!.maximumPayableAmount | currency: 'INR' : 'symbol' : '1.2-2' }}
+              </dd>
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs uppercase tracking-wide text-slate-500">Applicable limit</dt>
+
+              <dd class="mt-2 font-bold text-slate-900">
+                {{
+                  reviewContext()!.applicableCoverageLimit | currency: 'INR' : 'symbol' : '1.2-2'
+                }}
+              </dd>
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs uppercase tracking-wide text-slate-500">Action type</dt>
+
+              <dd class="mt-2 font-semibold text-slate-900">
+                {{ formatLabel(reviewContext()!.actionType) }}
+              </dd>
+            </div>
+          </dl>
+
+          <div class="mt-5 grid gap-2 text-sm">
+            <p class="rounded-xl bg-slate-50 px-4 py-3 text-slate-700">
+              Policy valid on action date:
+              <strong>
+                {{ reviewContext()!.policyValidOnActionDate ? 'Yes' : 'No' }}
+              </strong>
+            </p>
+
+            <p class="rounded-xl bg-slate-50 px-4 py-3 text-slate-700">
+              Matching claim-eligible violation:
+              <strong>
+                {{ reviewContext()!.actionMarkedClaimEligible ? 'Yes' : 'No' }}
+              </strong>
+            </p>
+
+            <p class="rounded-xl bg-slate-50 px-4 py-3 text-slate-700">
+              Coverage rule matched:
+              <strong>
+                {{ reviewContext()!.coverageMatched ? 'Yes' : 'No' }}
+              </strong>
+            </p>
+          </div>
+
+          @if (reviewContext()!.manualExclusionReviewRequired) {
+            <div class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <p class="font-semibold text-amber-950">Manual exclusion review required</p>
+
+              <p class="mt-2 text-sm leading-6 text-amber-800">
+                Active exclusions exist on this policy. Review the exclusions before recording a
+                financial decision.
+              </p>
+            </div>
+          }
+        }
+      </article>
+    </section>
+
+    <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-blue-700">
+            Customer submissions
+          </p>
+
+          <h2 class="mt-1 text-xl font-semibold text-slate-900">Supporting evidence</h2>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          @if (claim()!.status === 'MORE_INFORMATION_REQUIRED') {
+            <span
+              class="rounded-full px-3 py-1 text-xs font-semibold"
+              [class.bg-emerald-100]="customerResponseReceived()"
+              [class.text-emerald-700]="customerResponseReceived()"
+              [class.bg-amber-100]="!customerResponseReceived()"
+              [class.text-amber-800]="!customerResponseReceived()"
+            >
+              {{
+                customerResponseReceived() ? 'Customer response received' : 'Waiting for Customer'
+              }}
+            </span>
+          }
+
+          <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+            {{ documents().length }}
+            documents
+          </span>
+        </div>
+      </div>
+      @if (claim()!.status === 'MORE_INFORMATION_REQUIRED' && latestInformationRequest()) {
+        <section
+          class="mt-5 rounded-2xl border p-5"
+          [class.border-emerald-200]="customerResponseReceived()"
+          [class.bg-emerald-50]="customerResponseReceived()"
+          [class.border-amber-200]="!customerResponseReceived()"
+          [class.bg-amber-50]="!customerResponseReceived()"
+        >
+          <h3
+            class="font-semibold"
+            [class.text-emerald-950]="customerResponseReceived()"
+            [class.text-amber-950]="!customerResponseReceived()"
+          >
+            {{
+              customerResponseReceived()
+                ? 'Customer response received'
+                : 'Waiting for requested information'
+            }}
+          </h3>
+
+          <p
+            class="mt-2 text-sm leading-6"
+            [class.text-emerald-800]="customerResponseReceived()"
+            [class.text-amber-800]="!customerResponseReceived()"
+          >
+            Requested:
+            {{ latestInformationRequest()!.reason }}
+          </p>
+
+          <p
+            class="mt-2 text-xs"
+            [class.text-emerald-700]="customerResponseReceived()"
+            [class.text-amber-700]="!customerResponseReceived()"
+          >
+            Request sent:
+            {{ latestInformationRequest()!.decidedAt | date: 'medium' }}
+          </p>
+
+          @if (customerResponseReceived() && latestCustomerDocument()) {
+            <p class="mt-3 text-sm font-semibold text-emerald-800">
+              Latest Customer evidence:
+              {{ latestCustomerDocument()!.fileName }}
+              ·
+              {{ latestCustomerDocument()!.uploadedAt | date: 'medium' }}
+            </p>
+          }
+        </section>
+      }
+      @if (documents().length === 0) {
+        <div
+          class="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center"
+        >
+          <p class="font-semibold text-slate-900">No supporting evidence submitted</p>
+
+          <p class="mt-2 text-sm text-slate-600">
+            Request additional information if evidence is required before making a decision.
+          </p>
+        </div>
+      } @else {
+        <div class="mt-5 grid gap-4 lg:grid-cols-2">
+          @for (document of documents(); track document.documentId) {
+            <article class="rounded-2xl border border-slate-200 p-5">
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                    {{ formatLabel(document.documentType) }}
+                  </p>
+
+                  <h3 class="mt-1 font-semibold text-slate-900">
+                    {{ document.fileName }}
+                  </h3>
+                </div>
+
+                <span class="text-xs text-slate-500">
+                  {{ document.uploadedAt | date: 'medium' }}
+                </span>
+              </div>
+
+              <p class="mt-3 break-all text-sm font-medium text-blue-700">
+                {{ document.documentReference }}
+              </p>
+
+              @if (document.description) {
+                <p class="mt-3 text-sm leading-6 text-slate-600">
+                  {{ document.description }}
+                </p>
+              }
+
+              <p class="mt-4 text-xs text-slate-500">
+                Uploaded by user
+                {{ document.uploadedBy }}
+              </p>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-blue-700">Workflow audit</p>
+
+          <h2 class="mt-1 text-xl font-semibold text-slate-900">Decision history</h2>
+        </div>
+
+        <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+          {{ decisions().length }}
+          decisions
+        </span>
+      </div>
+
+      @if (decisions().length === 0) {
+        <p class="mt-5 rounded-2xl bg-slate-50 p-5 text-sm text-slate-600">
+          No workflow decisions have been recorded yet.
+        </p>
+      } @else {
+        <ol class="mt-6 space-y-4">
+          @for (decision of decisions(); track decision.decisionId) {
+            <li class="rounded-2xl border border-slate-200 p-5">
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p class="font-semibold text-slate-900">
+                    {{ formatLabel(decision.decisionType) }}
+                  </p>
+
+                  <p class="mt-1 text-xs text-slate-500">
+                    {{ formatLabel(decision.previousStatus) }}
+                    →
+                    {{ formatLabel(decision.newStatus) }}
+                  </p>
+                </div>
+
+                <time class="text-xs text-slate-500">
+                  {{ decision.decidedAt | date: 'medium' }}
+                </time>
+              </div>
+
+              <p class="mt-3 text-sm leading-6 text-slate-600">
+                {{ decision.reason }}
+              </p>
+
+              <div class="mt-4 flex flex-wrap gap-3 text-xs text-slate-500">
+                <span>
+                  Decision user:
+                  {{ decision.adjusterId }}
+                </span>
+
+                @if (decision.approvedAmount !== null) {
+                  <span>
+                    Approved:
+                    {{ decision.approvedAmount | currency: 'INR' : 'symbol' : '1.2-2' }}
+                  </span>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+
+    <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wider text-blue-700">Workflow actions</p>
+
+        <h2 class="mt-1 text-xl font-semibold text-slate-900">Next action</h2>
+      </div>
+
+      @if (canStartReview(claim()!.status)) {
+        <div class="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-5">
+          <p class="font-semibold text-blue-950">
+            {{ claim()!.status === 'ASSIGNED' ? 'Start claim review' : 'Resume claim review' }}
+          </p>
+
+          <p class="mt-2 text-sm leading-6 text-blue-800">
+            @if (claim()!.status === 'ASSIGNED') {
+              Begin the formal review after checking the incident and supporting evidence.
+            } @else if (customerResponseReceived()) {
+              New Customer evidence was received after the information request. Review the response
+              before resuming the claim.
+            } @else {
+              The claim is waiting for the Customer to provide the requested evidence. Resume only
+              when sufficient information is available.
+            }
+          </p>
+
+          <!-- <button
+            type="button"
+            class="mt-4 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
+            (click)="openPanel('START_REVIEW')"
+          >
+            {{ claim()!.status === 'ASSIGNED' ? 'Start review' : 'Resume review' }}
+          </button> -->
+          <button
+            type="button"
+            class="mt-4 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            [disabled]="
+              claim()!.status === 'MORE_INFORMATION_REQUIRED' && !customerResponseReceived()
+            "
+            (click)="openPanel('START_REVIEW')"
+          >
+            {{ claim()!.status === 'ASSIGNED' ? 'Start review' : 'Resume review' }}
+          </button>
+        </div>
+      }
+
+      @if (canMakeDecision(claim()!.status)) {
+        <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <button
+            type="button"
+            class="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-left hover:bg-amber-100"
+            (click)="openPanel('REQUEST_INFORMATION')"
+          >
+            <span class="font-semibold text-amber-950"> Request information </span>
+
+            <span class="mt-1 block text-xs leading-5 text-amber-800">
+              Ask the Customer for more evidence.
+            </span>
+          </button>
+
+          <button
+            type="button"
+            class="rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-left hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+            [disabled]="!reviewContext()?.eligible || contextLoading() || !!contextError()"
+            (click)="openPanel('APPROVE')"
+          >
+            <span class="font-semibold text-emerald-950"> Approve </span>
+
+            <span class="mt-1 block text-xs leading-5 text-emerald-800">
+              Approve the calculated maximum payable amount.
+            </span>
+          </button>
+
+          <button
+            type="button"
+            class="rounded-2xl border border-cyan-300 bg-cyan-50 p-4 text-left hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+            [disabled]="!reviewContext()?.eligible || contextLoading() || !!contextError()"
+            (click)="openPanel('PARTIALLY_APPROVE')"
+          >
+            <span class="font-semibold text-cyan-950"> Partially approve </span>
+
+            <span class="mt-1 block text-xs leading-5 text-cyan-800">
+              Approve an amount below the calculated maximum.
+            </span>
+          </button>
+
+          <button
+            type="button"
+            class="rounded-2xl border border-red-300 bg-red-50 p-4 text-left hover:bg-red-100"
+            (click)="openPanel('REJECT')"
+          >
+            <span class="font-semibold text-red-950"> Reject </span>
+
+            <span class="mt-1 block text-xs leading-5 text-red-800">
+              Reject the claim with a recorded explanation.
+            </span>
+          </button>
+        </div>
+      }
+
+      @if (canClose(claim()!.status)) {
+        <div class="mt-5 rounded-2xl border border-slate-300 bg-slate-50 p-5">
+          <p class="font-semibold text-slate-900">Final decision recorded</p>
+
+          <p class="mt-2 text-sm leading-6 text-slate-600">
+            Close the claim after confirming that the final decision and audit history are complete.
+          </p>
+
+          <button
+            type="button"
+            class="mt-4 rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-900"
+            (click)="openPanel('CLOSE')"
+          >
+            Close claim
+          </button>
+        </div>
+      }
+
+      @if (claim()!.status === 'CLOSED') {
+        <div class="mt-5 rounded-2xl border border-slate-300 bg-slate-50 p-5">
+          <p class="font-semibold text-slate-900">Claim closed</p>
+
+          <p class="mt-2 text-sm leading-6 text-slate-600">
+            This claim is complete and remains available as a read-only audit record.
+          </p>
+
+          @if (claim()!.closedAt) {
+            <p class="mt-3 text-xs text-slate-500">
+              Closed:
+              {{ claim()!.closedAt | date: 'medium' }}
+            </p>
+          }
+        </div>
+      }
+    </section>
+
+    @if (activePanel()) {
+      <section
+        #actionPanel
+        class="mt-6 scroll-mt-28 rounded-3xl border border-blue-200 bg-blue-50 p-6 shadow-sm sm:p-8"
+      >
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-blue-700">
+              Selected action
+            </p>
+
+            <h2 class="mt-1 text-xl font-semibold text-blue-950">
+              {{
+                activePanel() === 'START_REVIEW'
+                  ? claim()!.status === 'ASSIGNED'
+                    ? 'Start review'
+                    : 'Resume review'
+                  : activePanel() === 'REQUEST_INFORMATION'
+                    ? 'Request additional information'
+                    : activePanel() === 'APPROVE'
+                      ? 'Approve claim'
+                      : activePanel() === 'PARTIALLY_APPROVE'
+                        ? 'Partially approve claim'
+                        : activePanel() === 'REJECT'
+                          ? 'Reject claim'
+                          : 'Close claim'
+              }}
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            class="rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+            [disabled]="saving()"
+            (click)="closePanel()"
+          >
+            Cancel
+          </button>
+        </div>
+
+        @if (activePanel() === 'APPROVE' || activePanel() === 'PARTIALLY_APPROVE') {
+          <form class="mt-6 space-y-5" [formGroup]="approvalForm" (ngSubmit)="submitApproval()">
+            <div>
+              <label for="approvedAmount" class="block text-sm font-semibold text-slate-800">
+                Approved amount
+              </label>
+
+              <input
+                id="approvedAmount"
+                type="number"
+                min="0.01"
+                step="0.01"
+                formControlName="approvedAmount"
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                [readonly]="activePanel() === 'APPROVE'"
+              />
+
+              @if (activePanel() === 'APPROVE') {
+                <p class="mt-2 text-xs leading-5 text-slate-600">
+                  Full approval must equal the calculated maximum payable amount.
+                </p>
+              } @else {
+                <p class="mt-2 text-xs leading-5 text-slate-600">
+                  Partial approval must be greater than zero and below
+                  {{
+                    reviewContext()!.maximumPayableAmount | currency: 'INR' : 'symbol' : '1.2-2'
+                  }}.
+                </p>
+              }
+
+              @if (
+                approvalForm.controls.approvedAmount.touched &&
+                approvalForm.controls.approvedAmount.invalid
+              ) {
+                <p class="mt-2 text-sm text-red-700">Enter an approved amount greater than zero.</p>
+              }
+            </div>
+
+            <div>
+              <label for="approvalReason" class="block text-sm font-semibold text-slate-800">
+                Decision reason
+              </label>
+
+              <textarea
+                id="approvalReason"
+                rows="5"
+                maxlength="500"
+                formControlName="reason"
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                placeholder="Explain the evidence and calculation supporting this decision."
+              ></textarea>
+
+              @if (approvalForm.controls.reason.touched && approvalForm.controls.reason.invalid) {
+                <p class="mt-2 text-sm text-red-700">
+                  Enter a reason containing 5 to 500 characters.
+                </p>
+              }
+            </div>
+
+            <div class="flex justify-end">
+              <button
+                type="submit"
+                class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                [disabled]="saving()"
+              >
+                {{
+                  saving()
+                    ? 'Saving decision...'
+                    : activePanel() === 'APPROVE'
+                      ? 'Confirm approval'
+                      : 'Confirm partial approval'
+                }}
+              </button>
+            </div>
+          </form>
+        } @else {
+          <form
+            class="mt-6 space-y-5"
+            [formGroup]="reasonForm"
+            (ngSubmit)="submitReasonOperation()"
+          >
+            <div>
+              <label for="workflowReason" class="block text-sm font-semibold text-slate-800">
+                Reason
+              </label>
+
+              <textarea
+                id="workflowReason"
+                rows="5"
+                maxlength="500"
+                formControlName="reason"
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                [placeholder]="
+                  activePanel() === 'REQUEST_INFORMATION'
+                    ? 'Clearly describe the evidence or information the Customer must provide.'
+                    : activePanel() === 'REJECT'
+                      ? 'Explain why the claim is not approved.'
+                      : activePanel() === 'CLOSE'
+                        ? 'Explain why the claim workflow is ready to close.'
+                        : 'Summarize the reason for starting or resuming the review.'
+                "
+              ></textarea>
+
+              @if (reasonForm.controls.reason.touched && reasonForm.controls.reason.invalid) {
+                <p class="mt-2 text-sm text-red-700">
+                  Enter a reason containing 5 to 500 characters.
+                </p>
+              }
+            </div>
+
+            <div class="flex justify-end">
+              <button
+                type="submit"
+                class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                [disabled]="saving()"
+              >
+                {{
+                  saving()
+                    ? 'Saving...'
+                    : activePanel() === 'REQUEST_INFORMATION'
+                      ? 'Send information request'
+                      : activePanel() === 'REJECT'
+                        ? 'Confirm rejection'
+                        : activePanel() === 'CLOSE'
+                          ? 'Confirm closure'
+                          : claim()!.status === 'ASSIGNED'
+                            ? 'Start review'
+                            : 'Resume review'
+                }}
+              </button>
+            </div>
+          </form>
+        }
+      </section>
+    }
+  }
+</section>

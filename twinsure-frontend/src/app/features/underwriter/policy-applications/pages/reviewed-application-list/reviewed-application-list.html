@@ -1,0 +1,160 @@
+<section class="mx-auto max-w-7xl">
+  <header>
+    <p class="text-sm font-semibold uppercase tracking-widest text-blue-700">
+      Underwriting workspace
+    </p>
+
+    <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">Reviewed Applications</h1>
+
+    <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+      Review previously assessed applications and audit underwriting decisions made by the logged-in
+      Underwriter.
+    </p>
+  </header>
+
+  @if (error()) {
+    <div
+      class="mt-6 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      role="alert"
+    >
+      <span>
+        {{ error() }}
+      </span>
+
+      <button type="button" class="font-semibold underline" (click)="loadApplications()">
+        Try again
+      </button>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="mt-6 space-y-4">
+      @for (item of loadingItems; track item) {
+        <article
+          class="h-56 animate-pulse rounded-3xl border border-slate-200 bg-white shadow-sm"
+        ></article>
+      }
+    </div>
+  } @else if (applications().length === 0) {
+    <div
+      class="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm"
+    >
+      <h2 class="text-xl font-semibold text-slate-900">No reviewed applications</h2>
+
+      <p class="mt-2 text-sm text-slate-600">
+        Applications reviewed by this Underwriter will appear here.
+      </p>
+
+      <a
+        routerLink="/underwriter/applications/pending"
+        class="mt-6 inline-flex rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-800"
+      >
+        View pending applications
+      </a>
+    </div>
+  } @else {
+    <div class="mt-6 space-y-4">
+      @for (application of applications(); track application.applicationId) {
+        <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Application {{ application.applicationId }}
+              </p>
+
+              <h2 class="mt-2 text-xl font-bold text-slate-900">
+                Customer {{ application.customerId }}
+              </h2>
+
+              <p class="mt-1 text-sm text-slate-500">
+                Reviewed
+                {{
+                  application.reviewedAt
+                    ? (application.reviewedAt | date: 'medium')
+                    : 'Not available'
+                }}
+              </p>
+            </div>
+
+            <span
+              class="w-fit rounded-full px-3 py-1 text-xs font-semibold"
+              [class.bg-emerald-100]="
+                application.status === 'APPROVED' || application.status === 'ACCEPTED'
+              "
+              [class.text-emerald-700]="
+                application.status === 'APPROVED' || application.status === 'ACCEPTED'
+              "
+              [class.bg-amber-100]="application.status === 'CHANGES_REQUIRED'"
+              [class.text-amber-800]="application.status === 'CHANGES_REQUIRED'"
+              [class.bg-red-100]="application.status === 'REJECTED'"
+              [class.text-red-700]="application.status === 'REJECTED'"
+            >
+              {{ formatLabel(application.status) }}
+            </span>
+          </div>
+
+          <dl class="mt-6 grid gap-3 sm:grid-cols-4">
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">AI Twin</dt>
+
+              <dd class="mt-2 font-semibold text-slate-900">
+                {{ application.twinId }}
+              </dd>
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Risk score</dt>
+
+              <dd class="mt-2 font-semibold text-slate-900">
+                {{ application.riskScore ?? 'Not assessed' }}
+              </dd>
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Risk level</dt>
+
+              <dd class="mt-2 font-semibold text-slate-900">
+                {{ application.riskLevel ? formatLabel(application.riskLevel) : 'Not assessed' }}
+              </dd>
+            </div>
+
+            <div class="rounded-2xl bg-blue-50 p-4">
+              <dt class="text-xs font-medium uppercase tracking-wide text-blue-700">
+                Proposed premium
+              </dt>
+
+              <dd class="mt-2 font-semibold text-blue-950">
+                {{
+                  application.proposedPremium === null
+                    ? 'Not proposed'
+                    : (application.proposedPremium | currency: 'INR' : 'symbol' : '1.2-2')
+                }}
+              </dd>
+            </div>
+          </dl>
+
+          @if (application.decisionReason) {
+            <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Decision reason
+              </p>
+
+              <p class="mt-2 text-sm leading-6 text-slate-700">
+                {{ application.decisionReason }}
+              </p>
+            </div>
+          }
+
+          <div class="mt-6 flex justify-end">
+            <a
+              [routerLink]="['/underwriter/applications', application.applicationId]"
+              class="rounded-xl border border-blue-300 px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+            >
+              View review
+            </a>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

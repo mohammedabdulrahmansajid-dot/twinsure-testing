@@ -1,0 +1,394 @@
+<section class="mx-auto max-w-7xl">
+  <header>
+    <p
+      class="text-sm font-semibold uppercase tracking-widest text-blue-700"
+    >
+      AI Twin administration
+    </p>
+
+    <h1
+      class="mt-2 text-3xl font-bold tracking-tight text-slate-900"
+    >
+      AI Twins
+    </h1>
+
+    <p
+      class="mt-2 max-w-3xl text-sm leading-6 text-slate-600"
+    >
+      Inspect registered AI systems, Customer ownership, autonomy,
+      financial controls, and operational status.
+    </p>
+  </header>
+
+  @if (error()) {
+    <div
+      class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4"
+      role="alert"
+    >
+      <p class="text-sm text-red-700">
+        {{ error() }}
+      </p>
+
+      <button
+        type="button"
+        class="rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+        (click)="reload()"
+      >
+        Reload AI Twins
+      </button>
+    </div>
+  }
+
+  @if (success()) {
+    <div
+      class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+      role="status"
+    >
+      {{ success() }}
+    </div>
+  }
+
+  <section
+    class="mt-6 grid gap-4 md:grid-cols-3"
+  >
+    <article
+      class="rounded-2xl border border-blue-100 bg-blue-50 p-5"
+    >
+      <p
+        class="text-xs font-semibold uppercase tracking-wide text-blue-700"
+      >
+        Total AI Twins
+      </p>
+
+      <p
+        class="mt-2 text-3xl font-bold text-blue-950"
+      >
+        {{ aiTwins().length }}
+      </p>
+    </article>
+
+    <article
+      class="rounded-2xl border border-emerald-100 bg-emerald-50 p-5"
+    >
+      <p
+        class="text-xs font-semibold uppercase tracking-wide text-emerald-700"
+      >
+        Active
+      </p>
+
+      <p
+        class="mt-2 text-3xl font-bold text-emerald-950"
+      >
+        {{ activeCount() }}
+      </p>
+    </article>
+
+    <article
+      class="rounded-2xl border border-amber-100 bg-amber-50 p-5"
+    >
+      <p
+        class="text-xs font-semibold uppercase tracking-wide text-amber-700"
+      >
+        Suspended or retired
+      </p>
+
+      <p
+        class="mt-2 text-3xl font-bold text-amber-950"
+      >
+        {{ restrictedCount() }}
+      </p>
+    </article>
+  </section>
+
+  <section
+    class="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+  >
+    <div
+      class="grid gap-4 md:grid-cols-[1fr_220px_auto]"
+    >
+      <label>
+        <span
+          class="text-sm font-semibold text-slate-700"
+        >
+          Search AI Twins
+        </span>
+
+        <input
+          type="search"
+          class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+          placeholder="Twin name, provider, model, Twin ID, or Customer ID"
+          [ngModel]="searchText()"
+          (ngModelChange)="updateSearch($event)"
+        />
+      </label>
+
+      <label>
+        <span
+          class="text-sm font-semibold text-slate-700"
+        >
+          Status
+        </span>
+
+        <select
+          class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="updateStatusFilter($event)"
+        >
+          @for (
+            status of statusOptions;
+            track status
+          ) {
+            <option [value]="status">
+              {{
+                status === 'ALL'
+                  ? 'All statuses'
+                  : formatLabel(status)
+              }}
+            </option>
+          }
+        </select>
+      </label>
+
+      <button
+        type="button"
+        class="self-end rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        (click)="clearFilters()"
+      >
+        Clear filters
+      </button>
+    </div>
+  </section>
+
+  @if (loading()) {
+    <div
+      class="mt-6 h-96 animate-pulse rounded-3xl border border-slate-200 bg-white"
+    ></div>
+  } @else if (
+    filteredAiTwins().length === 0
+  ) {
+    <section
+      class="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center"
+    >
+      <h2
+        class="text-xl font-semibold text-slate-900"
+      >
+        No AI Twins found
+      </h2>
+
+      <p
+        class="mt-2 text-sm text-slate-500"
+      >
+        No AI Twins match the current search and status filters.
+      </p>
+    </section>
+  } @else {
+    <div
+      class="mt-6 grid gap-5 xl:grid-cols-2"
+    >
+      @for (
+        aiTwin of filteredAiTwins();
+        track aiTwin.twinId
+      ) {
+        <article
+          class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+        >
+          <div
+            class="flex flex-wrap items-start justify-between gap-4"
+          >
+            <div>
+              <p
+                class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+              >
+                AI Twin {{ aiTwin.twinId }}
+                · Customer {{ aiTwin.customerId }}
+              </p>
+
+              <h2
+                class="mt-2 text-xl font-bold text-slate-900"
+              >
+                {{ aiTwin.twinName }}
+              </h2>
+
+              <p
+                class="mt-1 text-sm text-slate-500"
+              >
+                {{ aiTwin.providerName }}
+                · {{ aiTwin.modelName }}
+              </p>
+            </div>
+
+            <span
+              class="rounded-full px-3 py-1 text-xs font-semibold"
+              [class.bg-emerald-100]="
+                aiTwin.status === 'ACTIVE'
+              "
+              [class.text-emerald-700]="
+                aiTwin.status === 'ACTIVE'
+              "
+              [class.bg-amber-100]="
+                aiTwin.status === 'SUSPENDED'
+              "
+              [class.text-amber-800]="
+                aiTwin.status === 'SUSPENDED'
+              "
+              [class.bg-slate-200]="
+                aiTwin.status === 'RETIRED'
+              "
+              [class.text-slate-700]="
+                aiTwin.status === 'RETIRED'
+              "
+            >
+              {{ formatLabel(aiTwin.status) }}
+            </span>
+          </div>
+
+          <dl
+            class="mt-5 grid gap-3 sm:grid-cols-3"
+          >
+            <div
+              class="rounded-2xl bg-slate-50 p-4"
+            >
+              <dt
+                class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+              >
+                Autonomy
+              </dt>
+
+              <dd
+                class="mt-2 text-sm font-semibold text-slate-900"
+              >
+                {{
+                  formatLabel(
+                    aiTwin.autonomyLevel
+                  )
+                }}
+              </dd>
+            </div>
+
+            <div
+              class="rounded-2xl bg-blue-50 p-4"
+            >
+              <dt
+                class="text-xs font-semibold uppercase tracking-wide text-blue-700"
+              >
+                Transaction limit
+              </dt>
+
+              <dd
+                class="mt-2 text-sm font-semibold text-blue-950"
+              >
+                {{
+                  aiTwin.transactionLimit
+                    | currency:'INR':'symbol':'1.2-2'
+                }}
+              </dd>
+            </div>
+
+            <div
+              class="rounded-2xl bg-violet-50 p-4"
+            >
+              <dt
+                class="text-xs font-semibold uppercase tracking-wide text-violet-700"
+              >
+                Approval threshold
+              </dt>
+
+              <dd
+                class="mt-2 text-sm font-semibold text-violet-950"
+              >
+                {{
+                  aiTwin.approvalThreshold
+                    | currency:'INR':'symbol':'1.2-2'
+                }}
+              </dd>
+            </div>
+          </dl>
+
+          <div
+            class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4"
+          >
+            <div
+              class="flex flex-col gap-3 sm:flex-row sm:items-end"
+            >
+              <label class="flex-1">
+                <span
+                  class="text-sm font-semibold text-slate-700"
+                >
+                  Operational status
+                </span>
+
+                <select
+                  class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                  [ngModel]="selectedStatus(aiTwin)"
+                  (ngModelChange)="
+                    updateStatusSelection(
+                      aiTwin.twinId,
+                      $event
+                    )
+                  "
+                >
+                  <option value="ACTIVE">
+                    Active
+                  </option>
+
+                  <option value="SUSPENDED">
+                    Suspended
+                  </option>
+
+                  <option value="RETIRED">
+                    Retired
+                  </option>
+                </select>
+              </label>
+
+              <button
+                type="button"
+                class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                [disabled]="
+                  updatingTwinId() === aiTwin.twinId
+                  || selectedStatus(aiTwin)
+                    === aiTwin.status
+                "
+                (click)="saveStatus(aiTwin)"
+              >
+                @if (
+                  updatingTwinId()
+                    === aiTwin.twinId
+                ) {
+                  Updating...
+                } @else {
+                  Update status
+                }
+              </button>
+            </div>
+
+            @if (
+              selectedStatus(aiTwin)
+                === 'RETIRED'
+              && aiTwin.status !== 'RETIRED'
+            ) {
+              <p
+                class="mt-3 text-xs leading-5 text-red-700"
+              >
+                Retiring an AI Twin may be a permanent lifecycle
+                decision. Confirm that the Twin is no longer required
+                before updating the status.
+              </p>
+            } @else if (
+              selectedStatus(aiTwin)
+                === 'SUSPENDED'
+              && aiTwin.status !== 'SUSPENDED'
+            ) {
+              <p
+                class="mt-3 text-xs leading-5 text-amber-700"
+              >
+                A suspended AI Twin cannot continue normal Customer
+                operations until it is reactivated.
+              </p>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

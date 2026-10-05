@@ -1,0 +1,553 @@
+<section class="mx-auto max-w-7xl">
+  <a
+    routerLink="/admin/insurance-products"
+    class="text-sm font-semibold text-blue-700 hover:text-blue-800"
+  >
+    Back to insurance products
+  </a>
+
+  @if (error()) {
+    <div
+      class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4"
+      role="alert"
+    >
+      <p class="text-sm text-red-700">
+        {{ error() }}
+      </p>
+
+      <button
+        type="button"
+        class="rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+        (click)="reload()"
+      >
+        Reload product
+      </button>
+    </div>
+  }
+
+  @if (success()) {
+    <div
+      class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+      role="status"
+    >
+      {{ success() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="mt-6 h-96 animate-pulse rounded-3xl border border-slate-200 bg-white"></div>
+  } @else if (product()) {
+    <header class="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-widest text-blue-700">
+          Product configuration
+        </p>
+
+        <div class="mt-2 flex flex-wrap items-center gap-3">
+          <h1 class="text-3xl font-bold tracking-tight text-slate-900">
+            {{ product()!.productName }}
+          </h1>
+
+          <span
+            class="rounded-full px-3 py-1 text-xs font-semibold"
+            [class.bg-emerald-100]="product()!.status === 'ACTIVE'"
+            [class.text-emerald-700]="product()!.status === 'ACTIVE'"
+            [class.bg-amber-100]="product()!.status === 'DRAFT'"
+            [class.text-amber-800]="product()!.status === 'DRAFT'"
+            [class.bg-slate-200]="product()!.status === 'INACTIVE'"
+            [class.text-slate-700]="product()!.status === 'INACTIVE'"
+          >
+            {{ formatLabel(product()!.status) }}
+          </span>
+        </div>
+
+        <p class="mt-2 text-sm text-slate-500">
+          Product {{ product()!.productId }} · Code {{ product()!.productCode }}
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4">
+        <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">Configuration</p>
+
+        <p class="mt-1 text-sm font-semibold text-blue-950">
+          {{ product()!.coverages.length }} coverage rules ·
+          {{ product()!.exclusions.length }} exclusions
+        </p>
+      </div>
+    </header>
+
+    <!-- Product details -->
+    <form
+      class="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+      [formGroup]="productForm"
+      (ngSubmit)="saveProduct()"
+      novalidate
+    >
+      <div class="border-b border-slate-200 bg-slate-50 px-6 py-5 sm:px-8">
+        <h2 class="text-xl font-semibold text-slate-900">Product details</h2>
+
+        <p class="mt-1 text-sm text-slate-600">
+          Update the Customer-facing details and financial terms.
+        </p>
+      </div>
+
+      <div class="grid gap-6 p-6 sm:grid-cols-2 sm:p-8">
+        <label>
+          <span class="text-sm font-semibold text-slate-700"> Product code </span>
+
+          <input
+            type="text"
+            class="mt-2 w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-slate-500"
+            [value]="product()!.productCode"
+            disabled
+          />
+        </label>
+
+        <label>
+          <span class="text-sm font-semibold text-slate-700"> Product name </span>
+
+          <input
+            type="text"
+            formControlName="productName"
+            maxlength="150"
+            class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+            [class.border-red-400]="productControlInvalid('productName')"
+          />
+
+          @if (productControlInvalid('productName')) {
+            <p class="mt-2 text-sm text-red-600">Product name must contain 3 to 150 characters.</p>
+          }
+        </label>
+
+        <label class="sm:col-span-2">
+          <span class="text-sm font-semibold text-slate-700"> Description </span>
+
+          <textarea
+            rows="4"
+            formControlName="description"
+            maxlength="500"
+            class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+            [class.border-red-400]="productControlInvalid('description')"
+          ></textarea>
+
+          @if (productControlInvalid('description')) {
+            <p class="mt-2 text-sm text-red-600">Description must contain 10 to 500 characters.</p>
+          }
+        </label>
+
+        <label>
+          <span class="text-sm font-semibold text-slate-700"> Base premium </span>
+
+          <input
+            type="number"
+            min="0.01"
+            step="0.01"
+            formControlName="basePremium"
+            class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+            [class.border-red-400]="productControlInvalid('basePremium')"
+          />
+
+          @if (productControlInvalid('basePremium')) {
+            <p class="mt-2 text-sm text-red-600">Base premium must be greater than zero.</p>
+          }
+        </label>
+
+        <label>
+          <span class="text-sm font-semibold text-slate-700"> Product coverage limit </span>
+
+          <input
+            type="number"
+            min="0.01"
+            step="0.01"
+            formControlName="coverageLimit"
+            class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+            [class.border-red-400]="productControlInvalid('coverageLimit')"
+          />
+
+          @if (productControlInvalid('coverageLimit')) {
+            <p class="mt-2 text-sm text-red-600">Coverage limit must be greater than zero.</p>
+          }
+        </label>
+
+        <label>
+          <span class="text-sm font-semibold text-slate-700"> Deductible </span>
+
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            formControlName="deductible"
+            class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+            [class.border-red-400]="
+              productControlInvalid('deductible') || deductibleExceedsProductCoverage()
+            "
+          />
+
+          @if (productControlInvalid('deductible')) {
+            <p class="mt-2 text-sm text-red-600">Deductible cannot be negative.</p>
+          } @else if (deductibleExceedsProductCoverage()) {
+            <p class="mt-2 text-sm text-red-600">
+              Deductible cannot exceed the product coverage limit.
+            </p>
+          }
+        </label>
+      </div>
+
+      <div class="flex justify-end border-t border-slate-200 bg-slate-50 px-6 py-5">
+        <button
+          type="submit"
+          class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white disabled:bg-slate-400"
+          [disabled]="savingProduct()"
+        >
+          {{ savingProduct() ? 'Saving...' : 'Save product details' }}
+        </button>
+      </div>
+    </form>
+
+    <!-- Coverage rules -->
+    <section class="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div class="border-b border-slate-200 bg-slate-50 px-6 py-5 sm:px-8">
+        <h2 class="text-xl font-semibold text-slate-900">Coverage rules</h2>
+
+        <p class="mt-1 text-sm text-slate-600">
+          Define the exact action-type and violation-type combinations covered by this product.
+        </p>
+      </div>
+
+      <div class="grid gap-6 p-6 xl:grid-cols-[1fr_420px] sm:p-8">
+        <div>
+          <div class="space-y-3">
+            @for (coverage of product()!.coverages; track coverage.coverageId) {
+              <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span
+                        class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
+                      >
+                        {{ formatLabel(coverage.actionType) }}
+                      </span>
+
+                      <span
+                        class="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700"
+                      >
+                        {{ formatLabel(coverage.violationType) }}
+                      </span>
+
+                      <span
+                        class="rounded-full px-3 py-1 text-xs font-semibold"
+                        [class.bg-emerald-100]="coverage.active"
+                        [class.text-emerald-700]="coverage.active"
+                        [class.bg-slate-200]="!coverage.active"
+                        [class.text-slate-700]="!coverage.active"
+                      >
+                        {{ coverage.active ? 'Active' : 'Inactive' }}
+                      </span>
+                    </div>
+
+                    <p class="mt-3 text-sm leading-6 text-slate-600">
+                      {{ coverage.description }}
+                    </p>
+
+                    <p class="mt-2 text-sm font-semibold text-slate-900">
+                      @if (coverage.coverageLimit === null) {
+                        Uses product coverage limit
+                      } @else {
+                        Rule limit: ₹{{ coverage.coverageLimit }}
+                      }
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="rounded-xl border border-blue-300 bg-white px-4 py-2 text-sm font-semibold text-blue-700"
+                    (click)="startCoverageEdit(coverage)"
+                  >
+                    Edit
+                  </button>
+                </div>
+              </article>
+            } @empty {
+              <div class="rounded-2xl border border-dashed border-slate-300 p-8 text-center">
+                <p class="font-semibold text-slate-900">No coverage rules configured</p>
+
+                <p class="mt-2 text-sm text-slate-500">
+                  Add at least one coverage rule before activating the product.
+                </p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <form
+          class="h-fit rounded-2xl border border-blue-200 bg-blue-50 p-5"
+          [formGroup]="coverageForm"
+          (ngSubmit)="saveCoverage()"
+          novalidate
+        >
+          <h3 class="text-lg font-semibold text-blue-950">
+            {{ editingCoverage() === null ? 'Add coverage rule' : 'Edit coverage rule' }}
+          </h3>
+
+          <div class="mt-5 space-y-4">
+            <label class="block">
+              <span class="text-sm font-semibold text-slate-700"> Action type </span>
+
+              <select
+                formControlName="actionType"
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 disabled:bg-slate-100"
+                [attr.disabled]="editingCoverage() === null ? null : true"
+                [class.border-red-400]="coverageControlInvalid('actionType')"
+              >
+                <option value="">Select action type</option>
+
+                @for (actionType of actionTypes; track actionType) {
+                  <option [value]="actionType">
+                    {{ formatLabel(actionType) }}
+                  </option>
+                }
+              </select>
+
+              @if (coverageControlInvalid('actionType')) {
+                <p class="mt-2 text-sm text-red-600">Action type is required.</p>
+              }
+            </label>
+
+            <label class="block">
+              <span class="text-sm font-semibold text-slate-700"> Violation type </span>
+
+              <select
+                formControlName="violationType"
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 disabled:bg-slate-100"
+                [attr.disabled]="editingCoverage() === null ? null : true"
+                [class.border-red-400]="coverageControlInvalid('violationType')"
+              >
+                <option value="">Select violation type</option>
+
+                @for (violationType of violationTypes; track violationType) {
+                  <option [value]="violationType">
+                    {{ formatLabel(violationType) }}
+                  </option>
+                }
+              </select>
+
+              @if (coverageControlInvalid('violationType')) {
+                <p class="mt-2 text-sm text-red-600">Violation type is required.</p>
+              }
+            </label>
+
+            <label class="block">
+              <span class="text-sm font-semibold text-slate-700"> Rule coverage limit </span>
+
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                formControlName="coverageLimit"
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3"
+                placeholder="Optional"
+                [class.border-red-400]="
+                  coverageControlInvalid('coverageLimit') || coverageExceedsProductLimit()
+                "
+              />
+
+              <p class="mt-2 text-xs text-slate-500">
+                Leave empty to use the product coverage limit.
+              </p>
+
+              @if (coverageControlInvalid('coverageLimit')) {
+                <p class="mt-2 text-sm text-red-600">Rule limit must be greater than zero.</p>
+              } @else if (coverageExceedsProductLimit()) {
+                <p class="mt-2 text-sm text-red-600">
+                  Rule limit cannot exceed the product coverage limit.
+                </p>
+              }
+            </label>
+
+            <label class="block">
+              <span class="text-sm font-semibold text-slate-700"> Description </span>
+
+              <textarea
+                rows="4"
+                formControlName="description"
+                maxlength="500"
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3"
+                placeholder="Describe what this coverage rule protects."
+                [class.border-red-400]="coverageControlInvalid('description')"
+              ></textarea>
+
+              @if (coverageControlInvalid('description')) {
+                <p class="mt-2 text-sm text-red-600">
+                  Coverage description is required and cannot exceed 500 characters.
+                </p>
+              }
+            </label>
+          </div>
+
+          <div class="mt-5 flex justify-end gap-3">
+            <button
+              type="button"
+              class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700"
+              [disabled]="savingCoverage()"
+              (click)="cancelCoverageEdit()"
+            >
+              {{ editingCoverage() === null ? 'Clear' : 'Cancel edit' }}
+            </button>
+
+            <button
+              type="submit"
+              class="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white disabled:bg-slate-400"
+              [disabled]="savingCoverage()"
+            >
+              @if (savingCoverage()) {
+                Saving...
+              } @else if (editingCoverage() === null) {
+                Add coverage
+              } @else {
+                Save coverage
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Exclusions -->
+    <section class="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div class="border-b border-slate-200 bg-slate-50 px-6 py-5 sm:px-8">
+        <h2 class="text-xl font-semibold text-slate-900">Product exclusions</h2>
+
+        <p class="mt-1 text-sm text-slate-600">
+          Define circumstances excluded from automatic claim eligibility.
+        </p>
+      </div>
+
+      <div class="grid gap-6 p-6 xl:grid-cols-[1fr_420px] sm:p-8">
+        <div class="space-y-3">
+          @for (exclusion of product()!.exclusions; track exclusion.exclusionId) {
+            <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span
+                      class="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700"
+                    >
+                      {{ exclusion.exclusionCode }}
+                    </span>
+
+                    <span
+                      class="rounded-full px-3 py-1 text-xs font-semibold"
+                      [class.bg-emerald-100]="exclusion.active"
+                      [class.text-emerald-700]="exclusion.active"
+                      [class.bg-slate-200]="!exclusion.active"
+                      [class.text-slate-700]="!exclusion.active"
+                    >
+                      {{ exclusion.active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </div>
+
+                  <p class="mt-3 text-sm leading-6 text-slate-600">
+                    {{ exclusion.description }}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  class="rounded-xl border border-blue-300 bg-white px-4 py-2 text-sm font-semibold text-blue-700"
+                  (click)="startExclusionEdit(exclusion)"
+                >
+                  Edit
+                </button>
+              </div>
+            </article>
+          } @empty {
+            <div class="rounded-2xl border border-dashed border-slate-300 p-8 text-center">
+              <p class="font-semibold text-slate-900">No exclusions configured</p>
+
+              <p class="mt-2 text-sm text-slate-500">
+                Add an exclusion when specific circumstances should prevent eligibility.
+              </p>
+            </div>
+          }
+        </div>
+
+        <form
+          class="h-fit rounded-2xl border border-red-200 bg-red-50 p-5"
+          [formGroup]="exclusionForm"
+          (ngSubmit)="saveExclusion()"
+          novalidate
+        >
+          <h3 class="text-lg font-semibold text-red-950">
+            {{ editingExclusion() === null ? 'Add exclusion' : 'Edit exclusion' }}
+          </h3>
+
+          <div class="mt-5 space-y-4">
+            <label class="block">
+              <span class="text-sm font-semibold text-slate-700"> Exclusion code </span>
+
+              <input
+                type="text"
+                formControlName="exclusionCode"
+                maxlength="100"
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 uppercase disabled:bg-slate-100"
+                placeholder="Example: UNAUTHORIZED_USE"
+                [attr.disabled]="editingExclusion() === null ? null : true"
+                [class.border-red-400]="exclusionControlInvalid('exclusionCode')"
+              />
+
+              @if (exclusionControlInvalid('exclusionCode')) {
+                <p class="mt-2 text-sm text-red-600">
+                  Exclusion code must contain 3 to 100 characters.
+                </p>
+              }
+            </label>
+
+            <label class="block">
+              <span class="text-sm font-semibold text-slate-700"> Description </span>
+
+              <textarea
+                rows="5"
+                formControlName="description"
+                maxlength="500"
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3"
+                placeholder="Explain when this exclusion applies."
+                [class.border-red-400]="exclusionControlInvalid('description')"
+              ></textarea>
+
+              @if (exclusionControlInvalid('description')) {
+                <p class="mt-2 text-sm text-red-600">
+                  Exclusion description is required and cannot exceed 500 characters.
+                </p>
+              }
+            </label>
+          </div>
+
+          <div class="mt-5 flex justify-end gap-3">
+            <button
+              type="button"
+              class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700"
+              [disabled]="savingExclusion()"
+              (click)="cancelExclusionEdit()"
+            >
+              {{ editingExclusion() === null ? 'Clear' : 'Cancel edit' }}
+            </button>
+
+            <button
+              type="submit"
+              class="rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white disabled:bg-slate-400"
+              [disabled]="savingExclusion()"
+            >
+              @if (savingExclusion()) {
+                Saving...
+              } @else if (editingExclusion() === null) {
+                Add exclusion
+              } @else {
+                Save exclusion
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  }
+</section>

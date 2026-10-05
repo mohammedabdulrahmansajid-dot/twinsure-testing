@@ -1,0 +1,504 @@
+<section class="mx-auto max-w-6xl">
+  <a
+    routerLink="/admin/claims"
+    class="text-sm font-semibold text-blue-700 hover:text-blue-800"
+  >
+    Back to claims
+  </a>
+
+  @if (error()) {
+    <div
+      class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4"
+      role="alert"
+    >
+      <p class="text-sm text-red-700">
+        {{ error() }}
+      </p>
+
+      <button
+        type="button"
+        class="rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+        (click)="reload()"
+      >
+        Reload claim
+      </button>
+    </div>
+  }
+
+  @if (success()) {
+    <div
+      class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+      role="status"
+    >
+      {{ success() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div
+      class="mt-6 h-96 animate-pulse rounded-3xl border border-slate-200 bg-white"
+    ></div>
+  } @else if (details()) {
+    <header
+      class="mt-5 flex flex-wrap items-start justify-between gap-4"
+    >
+      <div>
+        <p
+          class="text-sm font-semibold uppercase tracking-widest text-blue-700"
+        >
+          Claim administration
+        </p>
+
+        <h1
+          class="mt-2 text-3xl font-bold tracking-tight text-slate-900"
+        >
+          {{ details()!.claim.claimNumber }}
+        </h1>
+
+        <p
+          class="mt-2 text-sm text-slate-500"
+        >
+          Claim ID {{ details()!.claim.claimId }}
+          · Incident {{ details()!.claim.incidentId }}
+          · Customer {{ details()!.claim.customerId }}
+        </p>
+      </div>
+
+      <span
+        class="h-fit rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
+      >
+        {{
+          formatLabel(
+            details()!.claim.status
+          )
+        }}
+      </span>
+    </header>
+
+    <section
+      class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+    >
+      <h2
+        class="text-xl font-semibold text-slate-900"
+      >
+        Claim summary
+      </h2>
+
+      <dl
+        class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      >
+        <div
+          class="rounded-2xl bg-slate-50 p-4"
+        >
+          <dt
+            class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+          >
+            Claimed amount
+          </dt>
+
+          <dd
+            class="mt-2 font-bold text-slate-900"
+          >
+            {{
+              details()!.claim.claimedAmount
+                | currency:'INR':'symbol':'1.2-2'
+            }}
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl bg-emerald-50 p-4"
+        >
+          <dt
+            class="text-xs font-semibold uppercase tracking-wide text-emerald-700"
+          >
+            Approved amount
+          </dt>
+
+          <dd
+            class="mt-2 font-bold text-emerald-950"
+          >
+            @if (
+              details()!.claim.approvedAmount
+                !== null
+            ) {
+              {{
+                details()!.claim.approvedAmount
+                  | currency:'INR':'symbol':'1.2-2'
+              }}
+            } @else {
+              Pending
+            }
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl bg-slate-50 p-4"
+        >
+          <dt
+            class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+          >
+            Deductible applied
+          </dt>
+
+          <dd
+            class="mt-2 font-bold text-slate-900"
+          >
+            @if (
+              details()!.claim.deductibleApplied
+                !== null
+            ) {
+              {{
+                details()!.claim.deductibleApplied
+                  | currency:'INR':'symbol':'1.2-2'
+              }}
+            } @else {
+              Pending
+            }
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl bg-blue-50 p-4"
+        >
+          <dt
+            class="text-xs font-semibold uppercase tracking-wide text-blue-700"
+          >
+            Assigned Adjuster
+          </dt>
+
+          <dd
+            class="mt-2 font-semibold text-blue-950"
+          >
+            {{
+              details()!.claim
+                .assignedAdjusterId
+                === null
+                ? 'Unassigned'
+                : 'User '
+                  + details()!.claim
+                    .assignedAdjusterId
+            }}
+          </dd>
+        </div>
+      </dl>
+
+      <dl
+        class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      >
+        <div
+          class="rounded-2xl border border-slate-200 p-4"
+        >
+          <dt class="text-xs text-slate-500">
+            Policy ID
+          </dt>
+
+          <dd class="mt-1 font-semibold">
+            {{ details()!.claim.policyId }}
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl border border-slate-200 p-4"
+        >
+          <dt class="text-xs text-slate-500">
+            AI Twin ID
+          </dt>
+
+          <dd class="mt-1 font-semibold">
+            {{ details()!.claim.twinId }}
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl border border-slate-200 p-4"
+        >
+          <dt class="text-xs text-slate-500">
+            AI Action ID
+          </dt>
+
+          <dd class="mt-1 font-semibold">
+            {{ details()!.claim.actionId }}
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl border border-slate-200 p-4"
+        >
+          <dt class="text-xs text-slate-500">
+            Latest activity
+          </dt>
+
+          <dd class="mt-1 text-sm font-semibold">
+            {{
+              details()!.claim.updatedAt
+                | date:'medium'
+            }}
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    @if (
+      details()!.claim.status
+        === 'SUBMITTED'
+    ) {
+      <section
+        class="mt-6 rounded-3xl border border-blue-200 bg-blue-50 p-6 sm:p-8"
+      >
+        <h2
+          class="text-xl font-semibold text-blue-950"
+        >
+          Assign claim
+        </h2>
+
+        <p
+          class="mt-2 max-w-3xl text-sm leading-6 text-blue-800"
+        >
+          Enter an active Claims Adjuster user ID. Identity Service
+          verifies the account role and status before the claim is
+          assigned.
+        </p>
+
+        <div
+          class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end"
+        >
+          <label class="flex-1">
+            <span
+              class="text-sm font-semibold text-slate-700"
+            >
+              Claims Adjuster user ID
+            </span>
+
+            <input
+              type="number"
+              min="1"
+              step="1"
+              class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+              [ngModel]="adjusterId()"
+              (ngModelChange)="updateAdjusterId($event)"
+              placeholder="Example: 3"
+            />
+          </label>
+
+          <button
+            type="button"
+            class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            [disabled]="assigning()"
+            (click)="assignClaim()"
+          >
+            {{
+              assigning()
+                ? 'Assigning...'
+                : 'Assign claim'
+            }}
+          </button>
+        </div>
+      </section>
+    }
+
+    <section
+      class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+    >
+      <h2
+        class="text-xl font-semibold text-slate-900"
+      >
+        Source incident
+      </h2>
+
+      <dl
+        class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      >
+        <div
+          class="rounded-2xl bg-slate-50 p-4"
+        >
+          <dt class="text-xs text-slate-500">
+            Incident type
+          </dt>
+
+          <dd class="mt-1 font-semibold">
+            {{
+              formatLabel(
+                details()!.incident.incidentType
+              )
+            }}
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl bg-slate-50 p-4"
+        >
+          <dt class="text-xs text-slate-500">
+            Reported loss
+          </dt>
+
+          <dd class="mt-1 font-semibold">
+            {{
+              details()!.incident.lossAmount
+                | currency:'INR':'symbol':'1.2-2'
+            }}
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl bg-slate-50 p-4"
+        >
+          <dt class="text-xs text-slate-500">
+            Action occurred
+          </dt>
+
+          <dd class="mt-1 text-sm font-semibold">
+            {{
+              details()!.incident.actionOccurredAt
+                | date:'medium'
+            }}
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl bg-slate-50 p-4"
+        >
+          <dt class="text-xs text-slate-500">
+            Incident status
+          </dt>
+
+          <dd class="mt-1 font-semibold">
+            {{
+              formatLabel(
+                details()!.incident.status
+              )
+            }}
+          </dd>
+        </div>
+      </dl>
+
+      <div
+        class="mt-4 rounded-2xl border border-slate-200 p-4"
+      >
+        <p
+          class="text-sm leading-6 text-slate-600"
+        >
+          {{ details()!.incident.description }}
+        </p>
+      </div>
+    </section>
+
+    <section
+      class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+    >
+      <h2
+        class="text-xl font-semibold text-slate-900"
+      >
+        Supporting evidence
+      </h2>
+
+      <div class="mt-5 space-y-3">
+        @for (
+          document of details()!.documents;
+          track document.documentId
+        ) {
+          <article
+            class="rounded-2xl bg-slate-50 p-4"
+          >
+            <p class="font-semibold text-slate-900">
+              {{
+                formatLabel(
+                  document.documentType
+                )
+              }}
+              · {{ document.fileName }}
+            </p>
+
+            <p
+              class="mt-1 text-sm text-blue-700"
+            >
+              {{ document.documentReference }}
+            </p>
+
+            <p
+              class="mt-1 text-sm text-slate-600"
+            >
+              {{
+                document.description
+                  || 'No description'
+              }}
+            </p>
+
+            <p
+              class="mt-2 text-xs text-slate-500"
+            >
+              Uploaded by user
+              {{ document.uploadedBy }}
+              ·
+              {{
+                document.uploadedAt
+                  | date:'medium'
+              }}
+            </p>
+          </article>
+        } @empty {
+          <p class="text-sm text-slate-500">
+            No supporting documents added.
+          </p>
+        }
+      </div>
+    </section>
+
+    <section
+      class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+    >
+      <h2
+        class="text-xl font-semibold text-slate-900"
+      >
+        Decision history
+      </h2>
+
+      <div class="mt-5 space-y-3">
+        @for (
+          decision of details()!.decisions;
+          track decision.decisionId
+        ) {
+          <article
+            class="rounded-2xl bg-slate-50 p-4"
+          >
+            <p class="font-semibold text-slate-900">
+              {{
+                formatLabel(
+                  decision.decisionType
+                )
+              }}
+              ·
+              {{
+                formatLabel(
+                  decision.newStatus
+                )
+              }}
+            </p>
+
+            <p
+              class="mt-1 text-sm text-slate-600"
+            >
+              {{ decision.reason }}
+            </p>
+
+            <p
+              class="mt-2 text-xs text-slate-500"
+            >
+              Recorded by user
+              {{ decision.adjusterId }}
+              ·
+              {{
+                decision.decidedAt
+                  | date:'medium'
+              }}
+            </p>
+          </article>
+        } @empty {
+          <p class="text-sm text-slate-500">
+            No decisions recorded yet.
+          </p>
+        }
+      </div>
+    </section>
+  }
+</section>

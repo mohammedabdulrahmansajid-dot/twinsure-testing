@@ -1,0 +1,354 @@
+<section class="mx-auto max-w-7xl">
+  <header>
+    <p class="text-sm font-semibold uppercase tracking-widest text-blue-700">
+      Policy administration
+    </p>
+
+    <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+      Issued Policies
+    </h1>
+
+    <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+      Monitor issued insurance contracts and deactivate active policies
+      when cancellation or expiry is required.
+    </p>
+  </header>
+
+  @if (error()) {
+    <div
+      class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4"
+      role="alert"
+    >
+      <p class="text-sm text-red-700">
+        {{ error() }}
+      </p>
+
+      <button
+        type="button"
+        class="rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+        (click)="reload()"
+      >
+        Reload policies
+      </button>
+    </div>
+  }
+
+  @if (success()) {
+    <div
+      class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+      role="status"
+    >
+      {{ success() }}
+    </div>
+  }
+
+  <section class="mt-6 grid gap-4 md:grid-cols-3">
+    <article class="rounded-2xl border border-blue-100 bg-blue-50 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">
+        Total policies
+      </p>
+
+      <p class="mt-2 text-3xl font-bold text-blue-950">
+        {{ policies().length }}
+      </p>
+    </article>
+
+    <article class="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+        Active policies
+      </p>
+
+      <p class="mt-2 text-3xl font-bold text-emerald-950">
+        {{ activeCount() }}
+      </p>
+    </article>
+
+    <article class="rounded-2xl border border-slate-200 bg-slate-100 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">
+        Cancelled or expired
+      </p>
+
+      <p class="mt-2 text-3xl font-bold text-slate-900">
+        {{ inactiveCount() }}
+      </p>
+    </article>
+  </section>
+
+  <section
+    class="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+  >
+    <div class="grid gap-4 md:grid-cols-[1fr_220px_auto]">
+      <label>
+        <span class="text-sm font-semibold text-slate-700">
+          Search policies
+        </span>
+
+        <input
+          type="search"
+          class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+          placeholder="Policy number, policy, application, customer, Twin, or product ID"
+          [ngModel]="searchText()"
+          (ngModelChange)="updateSearch($event)"
+        />
+      </label>
+
+      <label>
+        <span class="text-sm font-semibold text-slate-700">
+          Status
+        </span>
+
+        <select
+          class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="updateStatusFilter($event)"
+        >
+          @for (status of statusOptions; track status) {
+            <option [value]="status">
+              {{ status === 'ALL' ? 'All statuses' : formatLabel(status) }}
+            </option>
+          }
+        </select>
+      </label>
+
+      <button
+        type="button"
+        class="self-end rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        (click)="clearFilters()"
+      >
+        Clear filters
+      </button>
+    </div>
+  </section>
+
+  @if (loading()) {
+    <div
+      class="mt-6 h-96 animate-pulse rounded-3xl border border-slate-200 bg-white"
+    ></div>
+  } @else if (filteredPolicies().length === 0) {
+    <section
+      class="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center"
+    >
+      <h2 class="text-xl font-semibold text-slate-900">
+        No policies found
+      </h2>
+
+      <p class="mt-2 text-sm text-slate-500">
+        No issued policies match the current search and status filters.
+      </p>
+    </section>
+  } @else {
+    <div class="mt-6 space-y-4">
+      @for (policy of filteredPolicies(); track policy.policyId) {
+        <article
+          class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+        >
+          <div
+            class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between"
+          >
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-3">
+                <h2 class="text-lg font-bold text-slate-900">
+                  {{ policy.policyNumber }}
+                </h2>
+
+                <span
+                  class="rounded-full px-3 py-1 text-xs font-semibold"
+                  [class]="statusClasses(policy.status)"
+                >
+                  {{ formatLabel(policy.status) }}
+                </span>
+              </div>
+
+              <p class="mt-2 text-sm text-slate-500">
+                Policy {{ policy.policyId }}
+                · Application {{ policy.applicationId }}
+                · Customer {{ policy.customerId }}
+                · AI Twin {{ policy.twinId }}
+                · Product {{ policy.productId }}
+              </p>
+
+              <dl class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="rounded-2xl bg-blue-50 p-4">
+                  <dt
+                    class="text-xs font-semibold uppercase tracking-wide text-blue-700"
+                  >
+                    Premium
+                  </dt>
+
+                  <dd class="mt-2 font-bold text-blue-950">
+                    {{
+                      policy.premium
+                        | currency: 'INR' : 'symbol' : '1.2-2'
+                    }}
+                  </dd>
+                </div>
+
+                <div class="rounded-2xl bg-slate-50 p-4">
+                  <dt
+                    class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+                  >
+                    Coverage limit
+                  </dt>
+
+                  <dd class="mt-2 font-bold text-slate-900">
+                    {{
+                      policy.coverageLimit
+                        | currency: 'INR' : 'symbol' : '1.2-2'
+                    }}
+                  </dd>
+                </div>
+
+                <div class="rounded-2xl bg-slate-50 p-4">
+                  <dt
+                    class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+                  >
+                    Starts
+                  </dt>
+
+                  <dd class="mt-2 text-sm font-semibold text-slate-900">
+                    {{ policy.startDate | date: 'mediumDate' }}
+                  </dd>
+                </div>
+
+                <div class="rounded-2xl bg-slate-50 p-4">
+                  <dt
+                    class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+                  >
+                    Ends
+                  </dt>
+
+                  <dd class="mt-2 text-sm font-semibold text-slate-900">
+                    {{ policy.endDate | date: 'mediumDate' }}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="flex shrink-0 flex-wrap gap-3">
+              <a
+                [routerLink]="['/admin/policies', policy.policyId]"
+                class="rounded-xl border border-blue-300 bg-white px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+              >
+                View contract
+              </a>
+
+              @if (
+                policy.status === 'ACTIVE' &&
+                selectedPolicyId() !== policy.policyId
+              ) {
+                <button
+                  type="button"
+                  class="rounded-xl border border-red-300 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50"
+                  (click)="openStatusUpdate(policy)"
+                >
+                  End policy
+                </button>
+              }
+            </div>
+          </div>
+
+          @if (
+            policy.status === 'ACTIVE' &&
+            selectedPolicyId() === policy.policyId
+          ) {
+            <section
+              class="mt-6 rounded-2xl border border-red-200 bg-red-50 p-5"
+            >
+              <h3 class="font-semibold text-red-950">
+                End active policy
+              </h3>
+
+              <p class="mt-2 text-sm leading-6 text-red-800">
+                This operation cannot reactivate the policy later.
+                Choose Cancelled or Expired and record a clear reason.
+              </p>
+
+              <div class="mt-4 grid gap-4 md:grid-cols-[220px_1fr]">
+                <label>
+                  <span class="text-sm font-semibold text-slate-700">
+                    New status
+                  </span>
+
+                  <select
+                    class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3"
+                    [ngModel]="selectedEndStatus()"
+                    (ngModelChange)="updateEndStatus($event)"
+                  >
+                    <option value="CANCELLED">
+                      Cancelled
+                    </option>
+
+                    <option value="EXPIRED">
+                      Expired
+                    </option>
+                  </select>
+                </label>
+
+                <label>
+                  <span class="text-sm font-semibold text-slate-700">
+                    Reason
+                  </span>
+
+                  <textarea
+                    rows="3"
+                    maxlength="500"
+                    class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3"
+                    placeholder="Enter 5 to 500 characters"
+                    [ngModel]="statusReason()"
+                    (ngModelChange)="updateReason($event)"
+                  ></textarea>
+
+                  <span class="mt-1 block text-xs text-slate-500">
+                    {{ statusReason().trim().length }}/500 characters
+                  </span>
+                </label>
+              </div>
+
+              <div class="mt-4 flex justify-end gap-3">
+                <button
+                  type="button"
+                  class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100"
+                  [disabled]="updating()"
+                  (click)="cancelStatusUpdate()"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  class="rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                  [disabled]="
+                    updating() ||
+                    statusReason().trim().length < 5 ||
+                    statusReason().trim().length > 500
+                  "
+                  (click)="saveStatus(policy)"
+                >
+                  {{
+                    updating()
+                      ? 'Updating...'
+                      : 'Confirm status change'
+                  }}
+                </button>
+              </div>
+            </section>
+          }
+
+          @if (policy.cancellationReason) {
+            <div
+              class="mt-4 rounded-2xl border border-red-100 bg-red-50 p-4"
+            >
+              <p class="text-sm font-semibold text-red-950">
+                Status reason
+              </p>
+
+              <p class="mt-1 text-sm text-red-800">
+                {{ policy.cancellationReason }}
+              </p>
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

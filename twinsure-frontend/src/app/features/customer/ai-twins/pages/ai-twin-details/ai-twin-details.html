@@ -1,0 +1,738 @@
+<section class="mx-auto max-w-6xl">
+  <header
+    class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+  >
+    <div>
+      <a
+        routerLink="/customer/ai-twins"
+        class="text-sm font-semibold text-blue-700 hover:text-blue-800"
+      >
+        Back to AI Twins
+      </a>
+
+      <p
+        class="mt-5 text-sm font-semibold uppercase tracking-widest text-blue-700"
+      >
+        AI Twin configuration
+      </p>
+
+      <h1
+        class="mt-2 text-3xl font-bold tracking-tight text-slate-900"
+      >
+        {{
+          aiTwin()?.twinName
+          || 'AI Twin details'
+        }}
+      </h1>
+
+      <p
+        class="mt-2 text-sm leading-6 text-slate-600"
+      >
+        Review identity, financial controls, action permissions,
+        and active-policy protection for this AI Twin.
+      </p>
+    </div>
+
+    @if (
+      aiTwin()
+      && !editing()
+    ) {
+      <button
+        type="button"
+        class="rounded-xl border border-blue-300 bg-white px-5 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-500"
+        [disabled]="
+          configurationLocked
+          || lockLoading()
+        "
+        (click)="startEditing()"
+      >
+        {{
+          configurationLocked
+            ? 'Configuration protected'
+            : 'Edit configuration'
+        }}
+      </button>
+    }
+  </header>
+
+  @if (error()) {
+    <div
+      class="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+      role="alert"
+    >
+      {{ error() }}
+    </div>
+  }
+
+  @if (lockError()) {
+    <div
+      class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4"
+      role="alert"
+    >
+      <p
+        class="text-sm text-amber-800"
+      >
+        {{ lockError() }}
+      </p>
+
+      <button
+        type="button"
+        class="rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-100"
+        (click)="reloadLock()"
+      >
+        Retry policy check
+      </button>
+    </div>
+  }
+
+  @if (
+    policyLock()?.locked
+  ) {
+    <section
+      class="mt-6 rounded-3xl border border-blue-200 bg-blue-50 p-6 shadow-sm sm:p-8"
+    >
+      <div
+        class="flex flex-wrap items-start justify-between gap-4"
+      >
+        <div>
+          <p
+            class="text-xs font-semibold uppercase tracking-wider text-blue-700"
+          >
+            Active-policy protection
+          </p>
+
+          <h2
+            class="mt-1 text-xl font-semibold text-blue-950"
+          >
+            Configuration protected by insurance
+          </h2>
+
+          <p
+            class="mt-3 max-w-3xl text-sm leading-6 text-blue-800"
+          >
+            {{ policyLock()!.explanation }}
+            Autonomy, financial controls, permission levels, and
+            action-specific limits remain unchanged during the active
+            policy term.
+          </p>
+        </div>
+
+        @if (
+          policyLock()!.policyId !== null
+        ) {
+          <a
+            [routerLink]="[
+              '/customer/policies',
+              policyLock()!.policyId
+            ]"
+            class="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
+          >
+            View policy
+          </a>
+        }
+      </div>
+
+      <dl
+        class="mt-5 grid gap-3 sm:grid-cols-3"
+      >
+        <div
+          class="rounded-2xl border border-blue-200 bg-white p-4"
+        >
+          <dt
+            class="text-xs font-semibold uppercase tracking-wide text-blue-700"
+          >
+            Policy
+          </dt>
+
+          <dd
+            class="mt-2 font-semibold text-blue-950"
+          >
+            {{
+              policyLock()!.policyId
+                === null
+                ? 'Protection verification'
+                : 'Policy '
+                  + policyLock()!.policyId
+            }}
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl border border-blue-200 bg-white p-4"
+        >
+          <dt
+            class="text-xs font-semibold uppercase tracking-wide text-blue-700"
+          >
+            Coverage starts
+          </dt>
+
+          <dd
+            class="mt-2 font-semibold text-blue-950"
+          >
+            @if (
+              policyLock()!.policyStartDate
+            ) {
+              {{
+                policyLock()!
+                  .policyStartDate
+                  | date:'mediumDate'
+              }}
+            } @else {
+              Not available
+            }
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl border border-blue-200 bg-white p-4"
+        >
+          <dt
+            class="text-xs font-semibold uppercase tracking-wide text-blue-700"
+          >
+            Coverage ends
+          </dt>
+
+          <dd
+            class="mt-2 font-semibold text-blue-950"
+          >
+            @if (
+              policyLock()!.policyEndDate
+            ) {
+              {{
+                policyLock()!
+                  .policyEndDate
+                  | date:'mediumDate'
+              }}
+            } @else {
+              Not available
+            }
+          </dd>
+        </div>
+      </dl>
+    </section>
+  }
+
+  @if (loading()) {
+    <div
+      class="mt-6 animate-pulse rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"
+    >
+      <div
+        class="h-7 w-56 rounded bg-slate-200"
+      ></div>
+
+      <div
+        class="mt-8 grid gap-4 sm:grid-cols-3"
+      >
+        <div
+          class="h-24 rounded-2xl bg-slate-100"
+        ></div>
+
+        <div
+          class="h-24 rounded-2xl bg-slate-100"
+        ></div>
+
+        <div
+          class="h-24 rounded-2xl bg-slate-100"
+        ></div>
+      </div>
+    </div>
+  } @else if (aiTwin()) {
+    <div
+      class="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+    >
+      <div
+        class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 px-6 py-5 sm:px-8"
+      >
+        <div>
+          <h2
+            class="text-xl font-semibold text-slate-900"
+          >
+            Twin identity
+          </h2>
+
+          <p
+            class="mt-1 text-sm text-slate-500"
+          >
+            Twin ID {{ aiTwin()!.twinId }}
+          </p>
+        </div>
+
+        <span
+          class="rounded-full px-3 py-1 text-xs font-semibold"
+          [class.bg-emerald-100]="
+            aiTwin()!.status === 'ACTIVE'
+          "
+          [class.text-emerald-700]="
+            aiTwin()!.status === 'ACTIVE'
+          "
+          [class.bg-amber-100]="
+            aiTwin()!.status === 'SUSPENDED'
+          "
+          [class.text-amber-800]="
+            aiTwin()!.status === 'SUSPENDED'
+          "
+          [class.bg-slate-200]="
+            aiTwin()!.status === 'RETIRED'
+          "
+          [class.text-slate-700]="
+            aiTwin()!.status === 'RETIRED'
+          "
+        >
+          {{ aiTwin()!.status }}
+        </span>
+      </div>
+
+      <dl class="grid sm:grid-cols-3">
+        <div
+          class="border-b border-slate-200 px-6 py-5 sm:px-8"
+        >
+          <dt
+            class="text-sm font-medium text-slate-500"
+          >
+            Twin name
+          </dt>
+
+          <dd
+            class="mt-2 font-semibold text-slate-900"
+          >
+            {{ aiTwin()!.twinName }}
+          </dd>
+        </div>
+
+        <div
+          class="border-b border-slate-200 px-6 py-5 sm:border-l sm:px-8"
+        >
+          <dt
+            class="text-sm font-medium text-slate-500"
+          >
+            Provider
+          </dt>
+
+          <dd
+            class="mt-2 font-semibold text-slate-900"
+          >
+            {{ aiTwin()!.providerName }}
+          </dd>
+        </div>
+
+        <div
+          class="border-b border-slate-200 px-6 py-5 sm:border-l sm:px-8"
+        >
+          <dt
+            class="text-sm font-medium text-slate-500"
+          >
+            Model
+          </dt>
+
+          <dd
+            class="mt-2 font-semibold text-slate-900"
+          >
+            {{ aiTwin()!.modelName }}
+          </dd>
+        </div>
+      </dl>
+
+      @if (
+        editing()
+        && !configurationLocked
+      ) {
+        <form
+          class="p-6 sm:p-8"
+          [formGroup]="configurationForm"
+          (ngSubmit)="saveConfiguration()"
+          novalidate
+        >
+          <div
+            class="grid gap-6 sm:grid-cols-3"
+          >
+            <div>
+              <label
+                for="autonomyLevel"
+                class="block text-sm font-semibold text-slate-700"
+              >
+                Autonomy level
+              </label>
+
+              <select
+                id="autonomyLevel"
+                formControlName="autonomyLevel"
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+              >
+                @for (
+                  option of autonomyOptions;
+                  track option.value
+                ) {
+                  <option
+                    [value]="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label
+                for="transactionLimit"
+                class="block text-sm font-semibold text-slate-700"
+              >
+                Transaction limit
+              </label>
+
+              <input
+                id="transactionLimit"
+                type="number"
+                min="0.01"
+                step="0.01"
+                formControlName="transactionLimit"
+                class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+              />
+
+              @if (
+                controlInvalid(
+                  'transactionLimit'
+                )
+              ) {
+                <p
+                  class="mt-2 text-sm text-red-600"
+                >
+                  Transaction limit must be greater than zero.
+                </p>
+              }
+            </div>
+
+            <div>
+              <label
+                for="approvalThreshold"
+                class="block text-sm font-semibold text-slate-700"
+              >
+                Approval threshold
+              </label>
+
+              <input
+                id="approvalThreshold"
+                type="number"
+                min="0"
+                step="0.01"
+                formControlName="approvalThreshold"
+                class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+              />
+
+              @if (
+                controlInvalid(
+                  'approvalThreshold'
+                )
+              ) {
+                <p
+                  class="mt-2 text-sm text-red-600"
+                >
+                  Approval threshold cannot be negative.
+                </p>
+              } @else if (
+                thresholdExceedsLimit
+              ) {
+                <p
+                  class="mt-2 text-sm text-red-600"
+                >
+                  Approval threshold cannot exceed the transaction
+                  limit.
+                </p>
+              }
+            </div>
+          </div>
+
+          <div
+            class="mt-7 flex justify-end gap-3"
+          >
+            <button
+              type="button"
+              class="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              [disabled]="saving()"
+              (click)="cancelEditing()"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+              [disabled]="
+                saving()
+                || configurationLocked
+              "
+            >
+              {{
+                saving()
+                  ? 'Saving...'
+                  : 'Save configuration'
+              }}
+            </button>
+          </div>
+        </form>
+      } @else {
+        <dl class="grid sm:grid-cols-3">
+          <div
+            class="px-6 py-5 sm:px-8"
+          >
+            <dt
+              class="text-sm font-medium text-slate-500"
+            >
+              Autonomy
+            </dt>
+
+            <dd
+              class="mt-2 font-semibold text-slate-900"
+            >
+              {{
+                formatLabel(
+                  aiTwin()!.autonomyLevel
+                )
+              }}
+            </dd>
+          </div>
+
+          <div
+            class="px-6 py-5 sm:border-l sm:px-8"
+          >
+            <dt
+              class="text-sm font-medium text-slate-500"
+            >
+              Transaction limit
+            </dt>
+
+            <dd
+              class="mt-2 font-semibold text-slate-900"
+            >
+              {{
+                aiTwin()!.transactionLimit
+                  | currency:'INR':'symbol':'1.2-2'
+              }}
+            </dd>
+          </div>
+
+          <div
+            class="px-6 py-5 sm:border-l sm:px-8"
+          >
+            <dt
+              class="text-sm font-medium text-slate-500"
+            >
+              Approval threshold
+            </dt>
+
+            <dd
+              class="mt-2 font-semibold text-slate-900"
+            >
+              {{
+                aiTwin()!.approvalThreshold
+                  | currency:'INR':'symbol':'1.2-2'
+              }}
+            </dd>
+          </div>
+        </dl>
+      }
+    </div>
+
+    <div
+      class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+    >
+      <div>
+        <h2
+          class="text-xl font-semibold text-slate-900"
+        >
+          Action permissions
+        </h2>
+
+        <p
+          class="mt-1 text-sm leading-6 text-slate-600"
+        >
+          Configure one permission for each supported action category.
+          Active-policy protection prevents these values from being
+          changed during the insured term.
+        </p>
+      </div>
+
+      @if (permissionsLoading()) {
+        <p
+          class="mt-6 text-sm text-slate-600"
+        >
+          Loading permissions...
+        </p>
+      } @else {
+        <div
+          class="mt-6 grid gap-4 lg:grid-cols-3"
+        >
+          @for (
+            actionType of actionTypes;
+            track actionType
+          ) {
+            <article
+              class="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+            >
+              <p
+                class="text-sm font-semibold text-slate-900"
+              >
+                {{ formatLabel(actionType) }}
+              </p>
+
+              <p
+                class="mt-2 text-sm text-slate-600"
+              >
+                Current:
+                <span class="font-semibold">
+                  {{
+                    permissionFor(actionType)
+                      ?.permissionLevel
+                      ? formatLabel(
+                          permissionFor(
+                            actionType
+                          )!.permissionLevel
+                        )
+                      : 'Not configured'
+                  }}
+                </span>
+              </p>
+
+              @if (
+                permissionFor(actionType)
+                  ?.actionLimit !== null
+                && permissionFor(actionType)
+                  ?.actionLimit !== undefined
+              ) {
+                <p
+                  class="mt-1 text-sm text-slate-600"
+                >
+                  Limit:
+                  {{
+                    permissionFor(actionType)!
+                      .actionLimit
+                      | currency:'INR':'symbol':'1.2-2'
+                  }}
+                </p>
+              }
+
+              <button
+                type="button"
+                class="mt-5 rounded-xl border border-blue-300 bg-white px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-500"
+                [disabled]="
+                  configurationLocked
+                  || lockLoading()
+                "
+                (click)="editPermission(actionType)"
+              >
+                {{
+                  configurationLocked
+                    ? 'Protected'
+                    : 'Configure'
+                }}
+              </button>
+            </article>
+          }
+        </div>
+      }
+
+      @if (
+        selectedActionType()
+        && !configurationLocked
+      ) {
+        <form
+          class="mt-6 rounded-2xl border border-blue-200 bg-blue-50 p-5"
+          [formGroup]="permissionForm"
+          (ngSubmit)="savePermission()"
+          novalidate
+        >
+          <h3
+            class="font-semibold text-blue-950"
+          >
+            Configure
+            {{
+              formatLabel(
+                selectedActionType()!
+              )
+            }}
+          </h3>
+
+          <div
+            class="mt-5 grid gap-5 sm:grid-cols-2"
+          >
+            <div>
+              <label
+                for="permissionLevel"
+                class="block text-sm font-semibold text-slate-700"
+              >
+                Permission level
+              </label>
+
+              <select
+                id="permissionLevel"
+                formControlName="permissionLevel"
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+              >
+                @for (
+                  option of permissionOptions;
+                  track option.value
+                ) {
+                  <option
+                    [value]="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label
+                for="actionLimit"
+                class="block text-sm font-semibold text-slate-700"
+              >
+                Action limit
+              </label>
+
+              <input
+                id="actionLimit"
+                type="number"
+                min="0.01"
+                step="0.01"
+                formControlName="actionLimit"
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 disabled:bg-slate-100"
+              />
+
+              <p
+                class="mt-2 text-xs text-slate-600"
+              >
+                A limit is required unless the action is prohibited.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="mt-5 flex justify-end gap-3"
+          >
+            <button
+              type="button"
+              class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700"
+              (click)="cancelPermission()"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+              [disabled]="
+                saving()
+                || configurationLocked
+              "
+            >
+              {{
+                saving()
+                  ? 'Saving...'
+                  : 'Save permission'
+              }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  }
+</section>

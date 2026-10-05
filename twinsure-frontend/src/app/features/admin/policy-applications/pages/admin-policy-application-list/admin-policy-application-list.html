@@ -1,0 +1,264 @@
+<section class="mx-auto max-w-7xl">
+  <header>
+    <p class="text-sm font-semibold uppercase tracking-widest text-blue-700">
+      Policy administration
+    </p>
+
+    <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+      Policy Applications
+    </h1>
+
+    <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+      Monitor application progress, underwriting results, proposal terms,
+      and Customer acceptance activity.
+    </p>
+  </header>
+
+  @if (error()) {
+    <div
+      class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4"
+      role="alert"
+    >
+      <p class="text-sm text-red-700">
+        {{ error() }}
+      </p>
+
+      <button
+        type="button"
+        class="rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+        (click)="reload()"
+      >
+        Reload applications
+      </button>
+    </div>
+  }
+
+  <section class="mt-6 grid gap-4 md:grid-cols-3">
+    <article class="rounded-2xl border border-amber-100 bg-amber-50 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">
+        Active processing
+      </p>
+
+      <p class="mt-2 text-3xl font-bold text-amber-950">
+        {{ pendingCount() }}
+      </p>
+    </article>
+
+    <article class="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+        Approved or accepted
+      </p>
+
+      <p class="mt-2 text-3xl font-bold text-emerald-950">
+        {{ approvedCount() }}
+      </p>
+    </article>
+
+    <article class="rounded-2xl border border-red-100 bg-red-50 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wide text-red-700">
+        Rejected, declined, or expired
+      </p>
+
+      <p class="mt-2 text-3xl font-bold text-red-950">
+        {{ rejectedCount() }}
+      </p>
+    </article>
+  </section>
+
+  <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div class="grid gap-4 md:grid-cols-[1fr_260px_auto]">
+      <label>
+        <span class="text-sm font-semibold text-slate-700">
+          Search applications
+        </span>
+
+        <input
+          type="search"
+          class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+          placeholder="Application, customer, Twin, product, or reviewer ID"
+          [ngModel]="searchText()"
+          (ngModelChange)="updateSearch($event)"
+        />
+      </label>
+
+      <label>
+        <span class="text-sm font-semibold text-slate-700">
+          Status
+        </span>
+
+        <select
+          class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="updateStatusFilter($event)"
+        >
+          @for (status of statusOptions; track status) {
+            <option [value]="status">
+              {{ status === 'ALL' ? 'All statuses' : formatLabel(status) }}
+            </option>
+          }
+        </select>
+      </label>
+
+      <button
+        type="button"
+        class="self-end rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        (click)="clearFilters()"
+      >
+        Clear filters
+      </button>
+    </div>
+  </section>
+
+  @if (loading()) {
+    <div class="mt-6 h-96 animate-pulse rounded-3xl border border-slate-200 bg-white"></div>
+  } @else if (filteredApplications().length === 0) {
+    <section class="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+      <h2 class="text-xl font-semibold text-slate-900">
+        No policy applications found
+      </h2>
+
+      <p class="mt-2 text-sm text-slate-500">
+        No applications match the current search and status filters.
+      </p>
+    </section>
+  } @else {
+    <div class="mt-6 space-y-4">
+      @for (
+        application of filteredApplications();
+        track application.applicationId
+      ) {
+        <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div class="flex flex-wrap items-center gap-3">
+                <h2 class="text-lg font-bold text-slate-900">
+                  Application {{ application.applicationId }}
+                </h2>
+
+                <span
+                  class="rounded-full px-3 py-1 text-xs font-semibold"
+                  [class]="statusClasses(application.status)"
+                >
+                  {{ formatLabel(application.status) }}
+                </span>
+              </div>
+
+              <p class="mt-2 text-sm text-slate-500">
+                Customer {{ application.customerId }}
+                · AI Twin {{ application.twinId }}
+                · Product {{ application.productId }}
+              </p>
+            </div>
+
+            <div class="text-right">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Submitted
+              </p>
+
+              <p class="mt-1 text-sm font-semibold text-slate-900">
+                {{ application.submittedAt | date:'medium' }}
+              </p>
+            </div>
+          </div>
+
+          <dl class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Risk score
+              </dt>
+
+              <dd class="mt-2 font-bold text-slate-900">
+                {{ application.riskScore ?? 'Pending' }}
+              </dd>
+
+              @if (application.riskLevel) {
+                <p class="mt-1 text-xs text-slate-500">
+                  {{ formatLabel(application.riskLevel) }}
+                </p>
+              }
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Recommendation
+              </dt>
+
+              <dd class="mt-2 font-semibold text-slate-900">
+                {{
+                  application.systemRecommendation
+                    ? formatLabel(application.systemRecommendation)
+                    : 'Pending'
+                }}
+              </dd>
+            </div>
+
+            <div class="rounded-2xl bg-blue-50 p-4">
+              <dt class="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                Proposed premium
+              </dt>
+
+              <dd class="mt-2 font-bold text-blue-950">
+                @if (application.proposedPremium !== null) {
+                  {{
+                    application.proposedPremium
+                      | currency:'INR':'symbol':'1.2-2'
+                  }}
+                } @else {
+                  Pending
+                }
+              </dd>
+            </div>
+
+            <div class="rounded-2xl bg-emerald-50 p-4">
+              <dt class="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                Proposed coverage
+              </dt>
+
+              <dd class="mt-2 font-bold text-emerald-950">
+                @if (application.proposedCoverageLimit !== null) {
+                  {{
+                    application.proposedCoverageLimit
+                      | currency:'INR':'symbol':'1.2-2'
+                  }}
+                } @else {
+                  Pending
+                }
+              </dd>
+            </div>
+          </dl>
+
+          @if (
+            application.decisionReason
+            || application.reviewedBy !== null
+          ) {
+            <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-sm font-semibold text-slate-900">
+                Review information
+              </p>
+
+              <p class="mt-2 text-sm leading-6 text-slate-600">
+                {{
+                  application.decisionReason
+                    || 'No decision reason recorded.'
+                }}
+              </p>
+
+              <p class="mt-2 text-xs text-slate-500">
+                Reviewer:
+                {{
+                  application.reviewedBy === null
+                    ? 'Not assigned'
+                    : 'User ' + application.reviewedBy
+                }}
+
+                @if (application.reviewedAt) {
+                  · {{ application.reviewedAt | date:'medium' }}
+                }
+              </p>
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

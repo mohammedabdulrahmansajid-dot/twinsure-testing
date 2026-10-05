@@ -1,0 +1,524 @@
+<section class="mx-auto max-w-6xl">
+  <a
+    [routerLink]="[
+      '/customer/ai-actions',
+      actionId
+    ]"
+    class="text-sm font-semibold text-blue-700 hover:text-blue-800"
+  >
+    Back to action evaluation
+  </a>
+
+  <header class="mt-5">
+    <p
+      class="text-sm font-semibold uppercase tracking-widest text-blue-700"
+    >
+      Claims journey
+    </p>
+
+    <h1
+      class="mt-2 text-3xl font-bold tracking-tight text-slate-900"
+    >
+      Report Incident
+    </h1>
+
+    <p
+      class="mt-2 max-w-3xl text-sm leading-6 text-slate-600"
+    >
+      Report the financial impact of a detected claim-eligible AI
+      action violation. TwinSure prevents unrelated incident types
+      from being selected.
+    </p>
+  </header>
+
+  @if (error()) {
+    <div
+      class="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      role="alert"
+    >
+      {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div
+      class="mt-6 h-80 animate-pulse rounded-3xl border border-slate-200 bg-white shadow-sm"
+    ></div>
+  } @else if (action()) {
+    <div
+      class="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]"
+    >
+      <aside
+        class="rounded-3xl border border-blue-100 bg-blue-50 p-6 sm:p-8"
+      >
+        <h2
+          class="text-xl font-semibold text-blue-950"
+        >
+          Source AI action
+        </h2>
+
+        <dl
+          class="mt-5 space-y-4 text-sm"
+        >
+          <div>
+            <dt class="text-blue-700">
+              Action
+            </dt>
+
+            <dd
+              class="mt-1 font-semibold text-blue-950"
+            >
+              {{
+                formatLabel(
+                  action()!.actionType
+                )
+              }}
+              ·
+              {{ action()!.transactionReference }}
+            </dd>
+          </div>
+
+          <div>
+            <dt class="text-blue-700">
+              Policy
+            </dt>
+
+            <dd
+              class="mt-1 font-semibold text-blue-950"
+            >
+              {{
+                action()!.policyId
+                  ?? 'No active policy'
+              }}
+            </dd>
+          </div>
+
+          <div>
+            <dt class="text-blue-700">
+              Action amount
+            </dt>
+
+            <dd
+              class="mt-1 font-semibold text-blue-950"
+            >
+              @if (
+                action()!.actionAmount !== null
+              ) {
+                {{
+                  action()!.actionAmount
+                    | currency:'INR':'symbol':'1.2-2'
+                }}
+              } @else {
+                Not provided
+              }
+            </dd>
+          </div>
+
+          <div>
+            <dt class="text-blue-700">
+              Insurance
+            </dt>
+
+            <dd
+              class="mt-1 font-semibold text-blue-950"
+            >
+              {{
+                action()!.insured
+                  ? 'Insured'
+                  : 'Uninsured'
+              }}
+            </dd>
+          </div>
+
+          @if (
+            action()!.bookingOutcome !== null
+          ) {
+            <div>
+              <dt class="text-blue-700">
+                Booking outcome
+              </dt>
+
+              <dd
+                class="mt-1 font-semibold text-blue-950"
+              >
+                {{
+                  formatLabel(
+                    action()!.bookingOutcome!
+                  )
+                }}
+              </dd>
+            </div>
+          }
+
+          @if (
+            action()!.purchaseOutcome !== null
+          ) {
+            <div>
+              <dt class="text-blue-700">
+                Purchase outcome
+              </dt>
+
+              <dd
+                class="mt-1 font-semibold text-blue-950"
+              >
+                {{
+                  formatLabel(
+                    action()!.purchaseOutcome!
+                  )
+                }}
+              </dd>
+            </div>
+          }
+
+          @if (
+            action()!.subscriptionOperation
+              !== null
+          ) {
+            <div>
+              <dt class="text-blue-700">
+                Subscription operation
+              </dt>
+
+              <dd
+                class="mt-1 font-semibold text-blue-950"
+              >
+                {{
+                  formatLabel(
+                    action()!
+                      .subscriptionOperation!
+                  )
+                }}
+              </dd>
+            </div>
+          }
+
+          @if (
+            action()!.cancellationCompleted
+              !== null
+          ) {
+            <div>
+              <dt class="text-blue-700">
+                Cancellation completed
+              </dt>
+
+              <dd
+                class="mt-1 font-semibold text-blue-950"
+              >
+                {{
+                  action()!
+                    .cancellationCompleted
+                    ? 'Yes'
+                    : 'No'
+                }}
+              </dd>
+            </div>
+          }
+        </dl>
+
+        <section class="mt-6">
+          <h3
+            class="font-semibold text-blue-950"
+          >
+            Detected violations
+          </h3>
+
+          @if (
+            action()!.violations.length === 0
+          ) {
+            <div
+              class="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+            >
+              No rule violation was detected. A compliant action
+              cannot create an insured incident.
+            </div>
+          } @else {
+            <div class="mt-3 space-y-3">
+              @for (
+                violation of action()!.violations;
+                track violation.violationId
+              ) {
+                <article
+                  class="rounded-2xl border border-blue-200 bg-white p-4"
+                >
+                  <div
+                    class="flex flex-wrap items-start justify-between gap-3"
+                  >
+                    <p
+                      class="font-semibold text-blue-950"
+                    >
+                      {{
+                        formatLabel(
+                          violation.violationType
+                        )
+                      }}
+                    </p>
+
+                    <span
+                      class="rounded-full px-2.5 py-1 text-xs font-semibold"
+                      [class.bg-emerald-100]="
+                        violation.claimEligible
+                      "
+                      [class.text-emerald-700]="
+                        violation.claimEligible
+                      "
+                      [class.bg-slate-200]="
+                        !violation.claimEligible
+                      "
+                      [class.text-slate-700]="
+                        !violation.claimEligible
+                      "
+                    >
+                      {{
+                        violation.claimEligible
+                          ? 'Incident eligible'
+                          : 'Not incident eligible'
+                      }}
+                    </span>
+                  </div>
+
+                  <p
+                    class="mt-2 text-sm leading-6 text-blue-800"
+                  >
+                    {{ violation.description }}
+                  </p>
+                </article>
+              }
+            </div>
+          }
+        </section>
+
+        @if (
+          !action()!.insured
+          || action()!.policyId === null
+        ) {
+          <div
+            class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
+          >
+            This action does not have an active policy and cannot
+            be reported as an insured incident.
+          </div>
+        }
+      </aside>
+
+      <form
+        class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        [formGroup]="incidentForm"
+        (ngSubmit)="submit()"
+      >
+        <div>
+          <p
+            class="text-xs font-semibold uppercase tracking-wider text-blue-700"
+          >
+            Incident information
+          </p>
+
+          <h2
+            class="mt-1 text-xl font-semibold text-slate-900"
+          >
+            Select a detected violation
+          </h2>
+
+          <p
+            class="mt-2 text-sm leading-6 text-slate-600"
+          >
+            Only claim-eligible violations detected during action
+            evaluation are available.
+          </p>
+        </div>
+
+        @if (!hasEligibleViolations()) {
+          <div
+            class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5"
+          >
+            <p
+              class="font-semibold text-amber-950"
+            >
+              No claim-eligible violation
+            </p>
+
+            <p
+              class="mt-2 text-sm leading-6 text-amber-800"
+            >
+              The evaluated action does not contain a claim-eligible
+              violation that can be used to report an incident.
+            </p>
+          </div>
+        }
+
+        <div class="mt-6 space-y-5">
+          <label class="block">
+            <span
+              class="text-sm font-semibold text-slate-700"
+            >
+              Incident type
+            </span>
+
+            <select
+              formControlName="incidentType"
+              class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-500 disabled:bg-slate-100"
+              [disabled]="
+                !hasEligibleViolations()
+              "
+            >
+              <option value="">
+                Select detected violation
+              </option>
+
+              @for (
+                incidentType
+                  of eligibleIncidentTypes();
+                track incidentType
+              ) {
+                <option
+                  [value]="incidentType"
+                >
+                  {{
+                    formatLabel(
+                      incidentType
+                    )
+                  }}
+                </option>
+              }
+            </select>
+
+            @if (
+              controlInvalid('incidentType')
+            ) {
+              <p
+                class="mt-1 text-sm text-red-600"
+              >
+                Select one of the detected claim-eligible
+                violations.
+              </p>
+            }
+          </label>
+
+          @if (selectedViolation()) {
+            <div
+              class="rounded-2xl border border-blue-200 bg-blue-50 p-4"
+            >
+              <p
+                class="text-sm font-semibold text-blue-950"
+              >
+                {{
+                  formatLabel(
+                    selectedViolation()!
+                      .violationType
+                  )
+                }}
+              </p>
+
+              <p
+                class="mt-2 text-sm leading-6 text-blue-800"
+              >
+                {{
+                  selectedViolation()!
+                    .description
+                }}
+              </p>
+
+              <p
+                class="mt-2 text-xs font-semibold uppercase tracking-wide text-blue-700"
+              >
+                Severity:
+                {{
+                  formatLabel(
+                    selectedViolation()!
+                      .severity
+                  )
+                }}
+              </p>
+            </div>
+          }
+
+          <label class="block">
+            <span
+              class="text-sm font-semibold text-slate-700"
+            >
+              Loss amount
+            </span>
+
+            <input
+              type="number"
+              min="0.01"
+              step="0.01"
+              formControlName="lossAmount"
+              class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500"
+            />
+
+            @if (
+              action()!.actionAmount !== null
+            ) {
+              <p
+                class="mt-2 text-xs text-slate-500"
+              >
+                The reported loss cannot exceed the simulated
+                action amount of
+                {{
+                  action()!.actionAmount
+                    | currency:'INR':'symbol':'1.2-2'
+                }}.
+              </p>
+            }
+
+            @if (
+              controlInvalid('lossAmount')
+            ) {
+              <p
+                class="mt-1 text-sm text-red-600"
+              >
+                Loss amount must be greater than zero.
+              </p>
+            }
+          </label>
+
+          <label class="block">
+            <span
+              class="text-sm font-semibold text-slate-700"
+            >
+              Incident description
+            </span>
+
+            <textarea
+              rows="6"
+              formControlName="description"
+              class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500"
+              placeholder="Explain the financial impact and how it relates to the detected violation."
+            ></textarea>
+
+            @if (
+              controlInvalid('description')
+            ) {
+              <p
+                class="mt-1 text-sm text-red-600"
+              >
+                Description must contain 10 to 500 characters.
+              </p>
+            }
+          </label>
+        </div>
+
+        <div
+          class="mt-7 flex justify-end"
+        >
+          <button
+            type="submit"
+            class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            [disabled]="
+              submitting()
+              || !action()!.insured
+              || action()!.policyId === null
+              || !hasEligibleViolations()
+            "
+          >
+            {{
+              submitting()
+                ? 'Reporting...'
+                : 'Report incident'
+            }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</section>

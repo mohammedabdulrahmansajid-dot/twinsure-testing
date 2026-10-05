@@ -1,0 +1,157 @@
+<section class="mx-auto max-w-5xl">
+  <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-widest text-blue-700">
+        Communication centre
+      </p>
+
+      <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+        Notifications
+      </h1>
+
+      <p class="mt-2 text-sm leading-6 text-slate-600">
+        Review policy, AI action, claim, and platform updates assigned to your account.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="inline-flex items-center justify-center rounded-xl border border-blue-300 bg-white px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+      [disabled]="updating() || unreadCount() === 0"
+      (click)="markAllAsRead()"
+    >
+      @if (updating()) {
+        Updating...
+      } @else {
+        Mark all as read
+      }
+    </button>
+  </header>
+
+  <div class="mt-6 grid gap-4 sm:grid-cols-3">
+    <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p class="text-sm font-medium text-slate-500">
+        Total notifications
+      </p>
+      <p class="mt-2 text-3xl font-bold text-slate-900">
+        {{ notifications().length }}
+      </p>
+    </article>
+
+    <article class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+      <p class="text-sm font-medium text-blue-700">
+        Unread
+      </p>
+      <p class="mt-2 text-3xl font-bold text-blue-900">
+        {{ unreadCount() }}
+      </p>
+    </article>
+
+    <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p class="text-sm font-medium text-slate-500">
+        Read
+      </p>
+      <p class="mt-2 text-3xl font-bold text-slate-900">
+        {{ readCount() }}
+      </p>
+    </article>
+  </div>
+
+  @if (error()) {
+    <div class="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+      {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="mt-6 space-y-4" aria-label="Loading notifications">
+      @for (item of loadingItems; track item) {
+        <div class="animate-pulse rounded-2xl border border-slate-200 bg-white p-6">
+          <div class="h-4 w-32 rounded bg-slate-200"></div>
+          <div class="mt-4 h-5 w-2/3 rounded bg-slate-200"></div>
+          <div class="mt-3 h-4 w-full rounded bg-slate-100"></div>
+        </div>
+      }
+    </div>
+  } @else if (notifications().length === 0) {
+    <div class="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+      <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-lg font-bold text-blue-700">
+        N
+      </div>
+      <h2 class="mt-5 text-xl font-semibold text-slate-900">
+        No notifications yet
+      </h2>
+      <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
+        Policy decisions, AI action warnings, claim assignments, and workflow updates will appear here.
+      </p>
+    </div>
+  } @else {
+    <div class="mt-6 space-y-4">
+      @for (notification of notifications(); track notification.notificationId) {
+        <article
+          class="rounded-2xl border bg-white p-5 shadow-sm transition sm:p-6"
+          [class.border-blue-200]="!notification.readStatus"
+          [class.bg-blue-50]="!notification.readStatus"
+          [class.border-slate-200]="notification.readStatus"
+        >
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span
+                  class="rounded-full px-3 py-1 text-xs font-semibold"
+                  [class.bg-red-100]="notification.priority === 'URGENT' || notification.priority === 'HIGH'"
+                  [class.text-red-700]="notification.priority === 'URGENT' || notification.priority === 'HIGH'"
+                  [class.bg-amber-100]="notification.priority === 'NORMAL'"
+                  [class.text-amber-800]="notification.priority === 'NORMAL'"
+                  [class.bg-slate-100]="notification.priority === 'LOW'"
+                  [class.text-slate-600]="notification.priority === 'LOW'"
+                >
+                  {{ notification.priority }}
+                </span>
+
+                @if (!notification.readStatus) {
+                  <span class="rounded-full bg-blue-700 px-3 py-1 text-xs font-semibold text-white">
+                    Unread
+                  </span>
+                }
+
+                <span class="text-xs text-slate-500">
+                  {{ notification.createdAt | date:'medium' }}
+                </span>
+              </div>
+
+              <h2 class="mt-3 text-lg font-semibold text-slate-900">
+                {{ notification.title }}
+              </h2>
+
+              <p class="mt-2 text-sm leading-6 text-slate-600">
+                {{ notification.message }}
+              </p>
+
+              <div class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
+                <span>Source: {{ notification.sourceService }}</span>
+
+                @if (notification.referenceType && notification.referenceId) {
+                  <span>
+                    Reference: {{ notification.referenceType }} {{ notification.referenceId }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            @if (!notification.readStatus) {
+              <button
+                type="button"
+                class="shrink-0 rounded-lg border border-blue-300 bg-white px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:text-slate-400"
+                [disabled]="updating()"
+                (click)="markAsRead(notification.notificationId)"
+              >
+                Mark as read
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

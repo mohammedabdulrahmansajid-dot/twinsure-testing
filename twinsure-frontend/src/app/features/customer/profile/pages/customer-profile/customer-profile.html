@@ -1,0 +1,204 @@
+<section class="mx-auto max-w-5xl">
+  <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-widest text-blue-700">
+        Customer account
+      </p>
+      <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+        Customer profile
+      </h1>
+      <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+        Maintain the personal and contact information used across TwinSure insurance and claim workflows.
+      </p>
+    </div>
+
+    @if (profile() && !editing()) {
+      <button
+        type="button"
+        class="rounded-xl border border-blue-300 bg-white px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
+        (click)="startEditing()"
+      >
+        Edit profile
+      </button>
+    }
+  </header>
+
+  @if (successMessage()) {
+    <div class="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (error()) {
+    <div class="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+      {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="mt-6 animate-pulse rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div class="h-6 w-48 rounded bg-slate-200"></div>
+      <div class="mt-8 grid gap-6 sm:grid-cols-2">
+        @for (item of loadingItems; track item) {
+          <div>
+            <div class="h-4 w-24 rounded bg-slate-200"></div>
+            <div class="mt-3 h-12 rounded-xl bg-slate-100"></div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else if (profile() && !editing()) {
+    <div class="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div class="border-b border-slate-200 bg-slate-50 px-6 py-5 sm:px-8">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-semibold text-slate-900">
+              {{ profile()?.fullName }}
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+              Customer ID {{ profile()?.customerId }}
+            </p>
+          </div>
+
+          <span
+            class="rounded-full px-3 py-1 text-xs font-semibold"
+            [class.bg-emerald-100]="profile()?.status === 'ACTIVE'"
+            [class.text-emerald-700]="profile()?.status === 'ACTIVE'"
+            [class.bg-red-100]="profile()?.status === 'SUSPENDED'"
+            [class.text-red-700]="profile()?.status === 'SUSPENDED'"
+          >
+            {{ profile()?.status }}
+          </span>
+        </div>
+      </div>
+
+      <dl class="grid gap-0 sm:grid-cols-2">
+        <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
+          <dt class="text-sm font-medium text-slate-500">Email</dt>
+          <dd class="mt-2 text-sm font-semibold text-slate-900">{{ profile()?.email }}</dd>
+        </div>
+        <div class="border-b border-slate-200 px-6 py-5 sm:px-8 sm:border-l">
+          <dt class="text-sm font-medium text-slate-500">Phone</dt>
+          <dd class="mt-2 text-sm font-semibold text-slate-900">{{ profile()?.phone }}</dd>
+        </div>
+        <div class="border-b border-slate-200 px-6 py-5 sm:col-span-2 sm:px-8">
+          <dt class="text-sm font-medium text-slate-500">Address</dt>
+          <dd class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-900">{{ profile()?.address }}</dd>
+        </div>
+        <div class="px-6 py-5 sm:px-8">
+          <dt class="text-sm font-medium text-slate-500">Created</dt>
+          <dd class="mt-2 text-sm text-slate-900">{{ profile()?.createdAt | date:'medium' }}</dd>
+        </div>
+        <div class="px-6 py-5 sm:border-l sm:px-8">
+          <dt class="text-sm font-medium text-slate-500">Last updated</dt>
+          <dd class="mt-2 text-sm text-slate-900">{{ profile()?.updatedAt | date:'medium' }}</dd>
+        </div>
+      </dl>
+    </div>
+  } @else {
+    <form
+      class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+      [formGroup]="profileForm"
+      (ngSubmit)="submit()"
+      novalidate
+    >
+      <div class="border-b border-slate-200 pb-5">
+        <h2 class="text-xl font-semibold text-slate-900">
+          {{ profile() ? 'Update profile' : 'Create your Customer profile' }}
+        </h2>
+        <p class="mt-2 text-sm leading-6 text-slate-600">
+          All fields are required. The values are validated before they are sent to Customer Service.
+        </p>
+      </div>
+
+      <div class="mt-6 grid gap-6 sm:grid-cols-2">
+        <div class="sm:col-span-2">
+          <label for="fullName" class="block text-sm font-semibold text-slate-700">Full name</label>
+          <input
+            id="fullName"
+            type="text"
+            formControlName="fullName"
+            autocomplete="name"
+            class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            [class.border-red-400]="controlInvalid('fullName')"
+          />
+          @if (controlInvalid('fullName')) {
+            <p class="mt-2 text-sm text-red-600">Full name must contain 2 to 150 characters.</p>
+          }
+        </div>
+
+        <div>
+          <label for="email" class="block text-sm font-semibold text-slate-700">Email</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            [class.border-red-400]="controlInvalid('email')"
+          />
+          @if (controlInvalid('email')) {
+            <p class="mt-2 text-sm text-red-600">Enter a valid email address up to 150 characters.</p>
+          }
+        </div>
+
+        <div>
+          <label for="phone" class="block text-sm font-semibold text-slate-700">Phone</label>
+          <input
+            id="phone"
+            type="tel"
+            formControlName="phone"
+            autocomplete="tel"
+            class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            [class.border-red-400]="controlInvalid('phone')"
+          />
+          @if (controlInvalid('phone')) {
+            <p class="mt-2 text-sm text-red-600">Phone number must contain 10 to 20 characters.</p>
+          }
+        </div>
+
+        <div class="sm:col-span-2">
+          <label for="address" class="block text-sm font-semibold text-slate-700">Address</label>
+          <textarea
+            id="address"
+            rows="4"
+            formControlName="address"
+            autocomplete="street-address"
+            class="mt-2 w-full resize-y rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            [class.border-red-400]="controlInvalid('address')"
+          ></textarea>
+          @if (controlInvalid('address')) {
+            <p class="mt-2 text-sm text-red-600">Address must contain 5 to 500 characters.</p>
+          }
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        @if (profile()) {
+          <button
+            type="button"
+            class="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            [disabled]="saving()"
+            (click)="cancelEditing()"
+          >
+            Cancel
+          </button>
+        }
+
+        <button
+          type="submit"
+          class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+          [disabled]="saving()"
+        >
+          @if (saving()) {
+            Saving...
+          } @else if (profile()) {
+            Save changes
+          } @else {
+            Create profile
+          }
+        </button>
+      </div>
+    </form>
+  }
+</section>

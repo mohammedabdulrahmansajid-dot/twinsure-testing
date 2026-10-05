@@ -1,0 +1,589 @@
+<section class="mx-auto max-w-7xl">
+  <div id="underwriter-page-message"></div>
+
+  <a
+    routerLink="/underwriter/applications/pending"
+    class="text-sm font-semibold text-blue-700 hover:text-blue-800"
+  >
+    Back to pending applications
+  </a>
+
+  @if (error()) {
+    <div
+      class="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      role="alert"
+    >
+      {{ error() }}
+    </div>
+  }
+
+  @if (successMessage()) {
+    <div
+      class="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700"
+      role="status"
+    >
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div
+      class="mt-6 h-96 animate-pulse rounded-3xl border border-slate-200 bg-white shadow-sm"
+    ></div>
+  } @else if (details()) {
+    <header class="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-widest text-blue-700">
+          Underwriting review
+        </p>
+
+        <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+          Application {{ application()!.applicationId }}
+        </h1>
+
+        <p class="mt-2 text-sm text-slate-500">
+          Customer {{ application()!.customerId }} · AI Twin {{ application()!.twinId }}
+        </p>
+      </div>
+
+      <span
+        class="w-fit rounded-full px-3 py-1 text-xs font-semibold"
+        [class.bg-blue-100]="application()!.status === 'PENDING_REVIEW'"
+        [class.text-blue-700]="application()!.status === 'PENDING_REVIEW'"
+        [class.bg-amber-100]="application()!.status === 'CHANGES_REQUIRED'"
+        [class.text-amber-800]="application()!.status === 'CHANGES_REQUIRED'"
+        [class.bg-emerald-100]="
+          application()!.status === 'APPROVED' || application()!.status === 'ACCEPTED'
+        "
+        [class.text-emerald-700]="
+          application()!.status === 'APPROVED' || application()!.status === 'ACCEPTED'
+        "
+        [class.bg-red-100]="application()!.status === 'REJECTED'"
+        [class.text-red-700]="application()!.status === 'REJECTED'"
+      >
+        {{ formatLabel(application()!.status) }}
+      </span>
+    </header>
+
+    <div class="mt-6 grid gap-6 xl:grid-cols-2">
+      <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 class="text-xl font-semibold text-slate-900">Insurance product</h2>
+
+        <p class="mt-2 text-sm leading-6 text-slate-600">
+          {{ product()!.description }}
+        </p>
+
+        <div class="mt-5">
+          <p class="font-semibold text-slate-900">
+            {{ product()!.productName }}
+          </p>
+
+          <p class="mt-1 text-sm text-slate-500">
+            {{ product()!.productCode }}
+          </p>
+        </div>
+
+        <dl class="mt-6 grid gap-3 sm:grid-cols-3">
+          <div class="rounded-2xl bg-blue-50 p-4">
+            <dt class="text-xs uppercase text-blue-700">Base premium</dt>
+
+            <dd class="mt-2 font-bold text-blue-950">
+              {{ product()!.basePremium | currency: 'INR' : 'symbol' : '1.2-2' }}
+            </dd>
+          </div>
+
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <dt class="text-xs uppercase text-slate-500">Coverage</dt>
+
+            <dd class="mt-2 font-bold text-slate-900">
+              {{ product()!.coverageLimit | currency: 'INR' : 'symbol' : '1.2-2' }}
+            </dd>
+          </div>
+
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <dt class="text-xs uppercase text-slate-500">Deductible</dt>
+
+            <dd class="mt-2 font-bold text-slate-900">
+              {{ product()!.deductible | currency: 'INR' : 'symbol' : '1.2-2' }}
+            </dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 class="text-xl font-semibold text-slate-900">AI Twin risk profile</h2>
+
+        @if (riskProfile()) {
+          <div class="mt-5">
+            <p class="font-semibold text-slate-900">
+              {{ riskProfile()!.twinName }}
+            </p>
+
+            <p class="mt-1 text-sm text-slate-500">
+              {{ formatLabel(riskProfile()!.autonomyLevel) }}
+              ·
+              {{ formatLabel(riskProfile()!.status) }}
+            </p>
+          </div>
+
+          <dl class="mt-6 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs uppercase text-slate-500">Transaction limit</dt>
+
+              <dd class="mt-2 font-bold text-slate-900">
+                {{ riskProfile()!.transactionLimit | currency: 'INR' : 'symbol' : '1.2-2' }}
+              </dd>
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs uppercase text-slate-500">Approval threshold</dt>
+
+              <dd class="mt-2 font-bold text-slate-900">
+                {{ riskProfile()!.approvalThreshold | currency: 'INR' : 'symbol' : '1.2-2' }}
+              </dd>
+            </div>
+          </dl>
+        }
+      </article>
+    </div>
+
+    <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 class="text-xl font-semibold text-slate-900">Action permissions</h2>
+
+      <p class="mt-2 text-sm leading-6 text-slate-600">
+        Review the AI Twin's action permissions and financial limits before assessing the
+        application.
+      </p>
+
+      <div class="mt-5 grid gap-4 lg:grid-cols-3">
+        @for (permission of riskProfile()?.permissions ?? []; track permission.permissionId) {
+          <article class="rounded-2xl bg-slate-50 p-4">
+            <div class="flex items-start justify-between gap-3">
+              <p class="font-semibold text-slate-900">
+                {{ formatLabel(permission.actionType) }}
+              </p>
+
+              <span
+                class="rounded-full px-2.5 py-1 text-xs font-semibold"
+                [class.bg-emerald-100]="permission.active"
+                [class.text-emerald-700]="permission.active"
+                [class.bg-slate-200]="!permission.active"
+                [class.text-slate-700]="!permission.active"
+              >
+                {{ permission.active ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+
+            <p class="mt-2 text-sm font-semibold text-blue-700">
+              {{ formatLabel(permission.permissionLevel) }}
+            </p>
+
+            <p class="mt-3 text-sm text-slate-600">
+              Action limit:
+              {{
+                permission.actionLimit === null
+                  ? 'Not configured'
+                  : (permission.actionLimit | currency: 'INR' : 'symbol' : '1.2-2')
+              }}
+            </p>
+          </article>
+        } @empty {
+          <p class="text-sm text-slate-500">No action permissions were found.</p>
+        }
+      </div>
+    </section>
+
+    @if (application()?.riskScore !== null && application()?.riskScore !== undefined) {
+      <section
+        id="underwriter-assessment-result"
+        class="mt-6 scroll-mt-6 rounded-3xl border border-blue-200 bg-blue-50 p-6 shadow-sm"
+      >
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 class="text-xl font-semibold text-blue-950">System risk assessment</h2>
+
+            <p class="mt-2 text-sm leading-6 text-blue-800">
+              This assessment is based on the AI Twin configuration, permissions, financial
+              controls, and verified incident history.
+            </p>
+          </div>
+
+          @if (hasCompleteAssessment()) {
+            <span
+              class="w-fit rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700"
+            >
+              Assessment complete
+            </span>
+          } @else {
+            <span
+              class="w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800"
+            >
+              Assessment processing
+            </span>
+          }
+        </div>
+
+        <dl class="mt-5 grid gap-3 sm:grid-cols-3">
+          <div class="rounded-2xl bg-white p-4">
+            <dt class="text-xs uppercase text-slate-500">Risk score</dt>
+
+            <dd class="mt-2 text-2xl font-bold text-slate-900">
+              {{ application()?.riskScore }}
+            </dd>
+          </div>
+
+          <div class="rounded-2xl bg-white p-4">
+            <dt class="text-xs uppercase text-slate-500">Risk level</dt>
+
+            <dd class="mt-2 font-bold text-slate-900">
+              {{
+                application()?.riskLevel ? formatLabel(application()?.riskLevel) : 'Not available'
+              }}
+            </dd>
+          </div>
+
+          <div class="rounded-2xl bg-white p-4">
+            <dt class="text-xs uppercase text-slate-500">Recommendation</dt>
+
+            <dd class="mt-2 font-bold text-slate-900">
+              {{
+                application()?.systemRecommendation
+                  ? formatLabel(application()?.systemRecommendation)
+                  : 'Not available'
+              }}
+            </dd>
+          </div>
+        </dl>
+
+        @if (!hasCompleteAssessment()) {
+          <div
+            class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
+          >
+            The complete assessment result is not yet available. Refresh the page if this message
+            remains visible.
+          </div>
+        }
+      </section>
+    }
+
+    @if (canAssess()) {
+      <section class="mt-6">
+        <h2 class="text-lg font-semibold text-slate-900">Underwriter actions</h2>
+
+        <p class="mt-1 text-sm text-slate-600">
+          Run the assessment first, then approve the proposal or select another underwriting
+          decision.
+        </p>
+
+        <div class="mt-4 flex flex-wrap gap-3">
+          <button
+            type="button"
+            class="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            [disabled]="saving()"
+            (click)="openPanel('ASSESS')"
+          >
+            {{ hasCompleteAssessment() ? 'Run assessment again' : 'Run risk assessment' }}
+          </button>
+
+          @if (canDecide()) {
+            <button
+              type="button"
+              class="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+              [disabled]="saving()"
+              (click)="openPanel('APPROVE')"
+            >
+              Approve
+            </button>
+          }
+
+          <button
+            type="button"
+            class="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+            [disabled]="saving()"
+            (click)="openPanel('CHANGES')"
+          >
+            Request changes
+          </button>
+
+          <button
+            type="button"
+            class="rounded-xl border border-red-300 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+            [disabled]="saving()"
+            (click)="openPanel('REJECT')"
+          >
+            Reject
+          </button>
+        </div>
+      </section>
+    }
+
+    <div id="underwriter-decision-panel" class="scroll-mt-6">
+      @if (activePanel() === 'ASSESS') {
+        <form
+          class="mt-6 rounded-3xl border border-blue-200 bg-white p-6 shadow-sm"
+          [formGroup]="assessmentForm"
+          (ngSubmit)="runAssessment()"
+        >
+          <h2 class="text-xl font-semibold text-slate-900">Risk assessment</h2>
+
+          <p class="mt-2 text-sm leading-6 text-slate-600">
+            Add verified historical incident information and optional assessment remarks.
+          </p>
+
+          <div class="mt-5 grid gap-5 sm:grid-cols-2">
+            <label>
+              <span class="text-sm font-semibold text-slate-700">
+                Verified previous incident count
+              </span>
+
+              <p class="mt-1 text-xs leading-5 text-slate-500">
+                Enter the number of verified prior incidents associated with this Customer or AI
+                Twin.
+              </p>
+
+              <input
+                type="number"
+                min="0"
+                max="100"
+                formControlName="previousIncidentCount"
+                class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+
+              @if (
+                assessmentForm.controls.previousIncidentCount.invalid &&
+                (assessmentForm.controls.previousIncidentCount.touched ||
+                  assessmentForm.controls.previousIncidentCount.dirty)
+              ) {
+                <p class="mt-1 text-sm text-red-600">Enter an incident count between 0 and 100.</p>
+              }
+            </label>
+
+            <label class="sm:col-span-2">
+              <span class="text-sm font-semibold text-slate-700"> Assessment remarks </span>
+
+              <textarea
+                rows="4"
+                maxlength="500"
+                formControlName="assessmentRemarks"
+                class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                placeholder="Add relevant underwriting observations."
+              ></textarea>
+
+              <p class="mt-1 text-xs text-slate-500">Maximum 500 characters.</p>
+            </label>
+          </div>
+
+          <div class="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              [disabled]="saving()"
+              (click)="closePanel()"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+              [disabled]="saving()"
+            >
+              {{ saving() ? 'Assessing...' : 'Run assessment' }}
+            </button>
+          </div>
+        </form>
+      }
+
+      @if (activePanel() === 'APPROVE') {
+        <form
+          class="mt-6 rounded-3xl border border-emerald-200 bg-white p-6 shadow-sm"
+          [formGroup]="approvalForm"
+          (ngSubmit)="approveApplication()"
+        >
+          <h2 class="text-xl font-semibold text-slate-900">Create policy proposal</h2>
+
+          <p class="mt-2 text-sm leading-6 text-slate-600">
+            Confirm the final premium, coverage limit, deductible, and approval reason presented to
+            the Customer.
+          </p>
+
+          <div class="mt-5 grid gap-5 sm:grid-cols-3">
+            <label>
+              <span class="text-sm font-semibold text-slate-700"> Proposed premium </span>
+
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                formControlName="proposedPremium"
+                class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              />
+            </label>
+
+            <label>
+              <span class="text-sm font-semibold text-slate-700"> Proposed coverage </span>
+
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                formControlName="proposedCoverageLimit"
+                class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              />
+            </label>
+
+            <label>
+              <span class="text-sm font-semibold text-slate-700"> Proposed deductible </span>
+
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                formControlName="proposedDeductible"
+                class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              />
+            </label>
+
+            <label class="sm:col-span-3">
+              <span class="text-sm font-semibold text-slate-700"> Approval reason </span>
+
+              <textarea
+                rows="4"
+                maxlength="500"
+                formControlName="reason"
+                class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                placeholder="Explain why this proposal is appropriate."
+              ></textarea>
+
+              @if (
+                approvalForm.controls.reason.invalid &&
+                (approvalForm.controls.reason.touched || approvalForm.controls.reason.dirty)
+              ) {
+                <p class="mt-1 text-sm text-red-600">
+                  Approval reason must contain 5 to 500 characters.
+                </p>
+              }
+            </label>
+          </div>
+
+          <div class="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              [disabled]="saving()"
+              (click)="closePanel()"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+              [disabled]="saving()"
+            >
+              {{ saving() ? 'Approving...' : 'Approve application' }}
+            </button>
+          </div>
+        </form>
+      }
+
+      @if (activePanel() === 'CHANGES' || activePanel() === 'REJECT') {
+        <form
+          class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+          [formGroup]="activePanel() === 'CHANGES' ? changesForm : rejectionForm"
+          (ngSubmit)="activePanel() === 'CHANGES' ? requestChanges() : rejectApplication()"
+        >
+          <h2 class="text-xl font-semibold text-slate-900">
+            {{ activePanel() === 'CHANGES' ? 'Request application changes' : 'Reject application' }}
+          </h2>
+
+          <p class="mt-2 text-sm leading-6 text-slate-600">
+            {{
+              activePanel() === 'CHANGES'
+                ? 'Explain what the Customer must correct before reassessment.'
+                : 'Provide a clear reason for rejecting this application.'
+            }}
+          </p>
+
+          <label class="mt-5 block">
+            <span class="text-sm font-semibold text-slate-700"> Decision reason </span>
+
+            <textarea
+              rows="5"
+              maxlength="500"
+              formControlName="reason"
+              class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            ></textarea>
+          </label>
+
+          <div class="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              [disabled]="saving()"
+              (click)="closePanel()"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="rounded-xl px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+              [class.bg-amber-700]="activePanel() === 'CHANGES'"
+              [class.hover:bg-amber-800]="activePanel() === 'CHANGES'"
+              [class.bg-red-700]="activePanel() === 'REJECT'"
+              [class.hover:bg-red-800]="activePanel() === 'REJECT'"
+              [disabled]="saving()"
+            >
+              {{
+                saving()
+                  ? 'Saving...'
+                  : activePanel() === 'CHANGES'
+                    ? 'Request changes'
+                    : 'Reject application'
+              }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+
+    @if (application()!.status !== 'PENDING_REVIEW' && application()!.decisionReason) {
+      <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 class="text-xl font-semibold text-slate-900">Final decision</h2>
+
+        <p class="mt-3 text-sm leading-7 text-slate-600">
+          {{ application()!.decisionReason }}
+        </p>
+
+        @if (application()!.status === 'APPROVED' || application()!.status === 'ACCEPTED') {
+          <dl class="mt-5 grid gap-3 sm:grid-cols-3">
+            <div class="rounded-2xl bg-blue-50 p-4">
+              <dt class="text-xs uppercase text-blue-700">Proposed premium</dt>
+
+              <dd class="mt-2 font-bold text-blue-950">
+                {{ application()!.proposedPremium | currency: 'INR' : 'symbol' : '1.2-2' }}
+              </dd>
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs uppercase text-slate-500">Proposed coverage</dt>
+
+              <dd class="mt-2 font-bold text-slate-900">
+                {{ application()!.proposedCoverageLimit | currency: 'INR' : 'symbol' : '1.2-2' }}
+              </dd>
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs uppercase text-slate-500">Proposed deductible</dt>
+
+              <dd class="mt-2 font-bold text-slate-900">
+                {{ application()!.proposedDeductible | currency: 'INR' : 'symbol' : '1.2-2' }}
+              </dd>
+            </div>
+          </dl>
+        }
+      </section>
+    }
+  }
+</section>

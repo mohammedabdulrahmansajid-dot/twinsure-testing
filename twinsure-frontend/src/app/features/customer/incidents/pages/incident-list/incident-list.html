@@ -1,0 +1,54 @@
+<section class="mx-auto max-w-7xl">
+  <header>
+    <p class="text-sm font-semibold uppercase tracking-widest text-blue-700">Claims journey</p>
+    <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">My Incidents</h1>
+    <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Track reported AI action losses and continue eligible incidents into the claim workflow.</p>
+  </header>
+
+  @if (error()) {
+    <div class="mt-6 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+      <span>{{ error() }}</span>
+      <button type="button" class="font-semibold underline" (click)="loadIncidents()">Try again</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="mt-6 space-y-4">
+      @for (item of loadingItems; track item) {
+        <article class="h-48 animate-pulse rounded-3xl border border-slate-200 bg-white shadow-sm"></article>
+      }
+    </div>
+  } @else if (incidents().length === 0) {
+    <div class="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
+      <h2 class="text-xl font-semibold text-slate-900">No incidents reported</h2>
+      <p class="mt-2 text-sm text-slate-600">Claim-eligible AI action violations can be reported from Action Details.</p>
+      <a routerLink="/customer/ai-actions" class="mt-6 inline-flex rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white">View action history</a>
+    </div>
+  } @else {
+    <div class="mt-6 space-y-4">
+      @for (incident of incidents(); track incident.incidentId) {
+        <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200 hover:shadow-md">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Incident {{ incident.incidentId }} · Action {{ incident.actionId }}</p>
+              <h2 class="mt-2 text-xl font-bold text-slate-900">{{ formatLabel(incident.incidentType) }}</h2>
+              <p class="mt-2 text-sm text-slate-600">{{ incident.description }}</p>
+            </div>
+            <span class="w-fit rounded-full px-3 py-1 text-xs font-semibold" [class.bg-blue-100]="incident.status === 'REPORTED'" [class.text-blue-700]="incident.status === 'REPORTED'" [class.bg-emerald-100]="incident.status === 'CLAIM_CREATED'" [class.text-emerald-700]="incident.status === 'CLAIM_CREATED'" [class.bg-slate-200]="incident.status === 'CLOSED'" [class.text-slate-700]="incident.status === 'CLOSED'">{{ formatLabel(incident.status) }}</span>
+          </div>
+
+          <dl class="mt-6 grid gap-3 sm:grid-cols-4">
+            <div class="rounded-2xl bg-red-50 p-4"><dt class="text-xs uppercase text-red-700">Reported loss</dt><dd class="mt-2 font-bold text-red-950">{{ incident.lossAmount | currency:'INR':'symbol':'1.2-2' }}</dd></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><dt class="text-xs uppercase text-slate-500">Policy</dt><dd class="mt-2 font-semibold">{{ incident.policyId }}</dd></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><dt class="text-xs uppercase text-slate-500">AI Twin</dt><dd class="mt-2 font-semibold">{{ incident.twinId }}</dd></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><dt class="text-xs uppercase text-slate-500">Reported</dt><dd class="mt-2 font-semibold">{{ incident.reportedAt | date:'medium' }}</dd></div>
+          </dl>
+
+          <div class="mt-6 flex justify-end">
+            <a [routerLink]="['/customer/incidents', incident.incidentId]" class="rounded-xl border border-blue-300 px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50">View incident</a>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

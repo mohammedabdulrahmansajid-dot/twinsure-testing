@@ -1,0 +1,128 @@
+<section class="mx-auto max-w-7xl">
+  <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-widest text-blue-700">Insurance journey</p>
+      <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">Policy Applications</h1>
+      <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+        Track submitted applications, underwriting decisions, proposals, and acceptance status.
+      </p>
+    </div>
+    <a
+      routerLink="/customer/insurance-products"
+      class="inline-flex items-center justify-center rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-800"
+      >Browse insurance plans</a
+    >
+  </header>
+
+  @if (error()) {
+    <div
+      class="mt-6 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      role="alert"
+    >
+      <span>{{ error() }}</span>
+      <button type="button" class="font-semibold underline" (click)="reload()">Try again</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="mt-6 space-y-4">
+      @for (item of loadingItems; track item) {
+        <article class="animate-pulse rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="h-6 w-48 rounded bg-slate-200"></div>
+          <div class="mt-5 grid gap-3 sm:grid-cols-4">
+            <div class="h-16 rounded bg-slate-100"></div>
+            <div class="h-16 rounded bg-slate-100"></div>
+            <div class="h-16 rounded bg-slate-100"></div>
+            <div class="h-16 rounded bg-slate-100"></div>
+          </div>
+        </article>
+      }
+    </div>
+  } @else if (applications().length === 0) {
+    <div
+      class="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm"
+    >
+      <h2 class="text-xl font-semibold text-slate-900">No policy applications yet</h2>
+      <p class="mt-2 text-sm text-slate-600">
+        Choose an active insurance plan and an owned AI Twin to begin underwriting.
+      </p>
+      <a
+        routerLink="/customer/insurance-products"
+        class="mt-6 inline-flex rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-800"
+        >Browse plans</a
+      >
+    </div>
+  } @else {
+    <div class="mt-6 space-y-4">
+      @for (application of applications(); track application.applicationId) {
+        <article
+          class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200 hover:shadow-md"
+        >
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Application {{ application.applicationId }}
+              </p>
+              <h2 class="mt-2 text-xl font-bold text-slate-900">
+                AI Twin {{ application.twinId }} · Product {{ application.productId }}
+              </h2>
+              <p class="mt-2 text-sm text-slate-500">
+                Submitted {{ application.submittedAt | date: 'medium' }}
+              </p>
+            </div>
+            <span
+              class="w-fit rounded-full px-3 py-1 text-xs font-semibold"
+              [class.bg-blue-100]="application.status === 'PENDING_REVIEW'"
+              [class.text-blue-700]="application.status === 'PENDING_REVIEW'"
+              [class.bg-amber-100]="application.status === 'CHANGES_REQUIRED'"
+              [class.text-amber-800]="application.status === 'CHANGES_REQUIRED'"
+              [class.bg-emerald-100]="
+                application.status === 'APPROVED' || application.status === 'ACCEPTED'
+              "
+              [class.text-emerald-700]="
+                application.status === 'APPROVED' || application.status === 'ACCEPTED'
+              "
+              [class.bg-red-100]="application.status === 'REJECTED'"
+              [class.text-red-700]="application.status === 'REJECTED'"
+              >{{ formatLabel(application.status) }}</span
+            >
+          </div>
+
+          <dl class="mt-6 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl bg-blue-50 p-4">
+              <dt class="text-xs font-medium uppercase tracking-wide text-blue-700">
+                Proposed premium
+              </dt>
+
+              <dd class="mt-2 font-semibold text-blue-950">
+                @if (application.status === 'APPROVED' || application.status === 'ACCEPTED') {
+                  {{ application.proposedPremium | currency: 'INR' : 'symbol' : '1.2-2' }}
+                } @else if (application.status === 'PENDING_REVIEW') {
+                  Awaiting proposal
+                } @else {
+                  Not applicable
+                }
+              </dd>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs font-medium uppercase text-slate-500">Reviewed</dt>
+              <dd class="mt-2 font-semibold text-slate-900">
+                {{
+                  application.reviewedAt ? (application.reviewedAt | date: 'mediumDate') : 'Not yet'
+                }}
+              </dd>
+            </div>
+          </dl>
+
+          <div class="mt-6 flex justify-end">
+            <a
+              [routerLink]="['/customer/policy-applications', application.applicationId]"
+              class="inline-flex rounded-xl border border-blue-300 px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+              >View application</a
+            >
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

@@ -1,0 +1,222 @@
+<section class="mx-auto max-w-7xl">
+  <header>
+    <p class="text-sm font-semibold uppercase tracking-widest text-blue-700">
+      Customer administration
+    </p>
+
+    <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+      Customers
+    </h1>
+
+    <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+      Review Customer profiles, Identity Service links, contact details,
+      and current profile status.
+    </p>
+  </header>
+
+  @if (error()) {
+    <div
+      class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4"
+      role="alert"
+    >
+      <p class="text-sm text-red-700">
+        {{ error() }}
+      </p>
+
+      <button
+        type="button"
+        class="rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+        (click)="reload()"
+      >
+        Reload Customers
+      </button>
+    </div>
+  }
+
+  @if (success()) {
+    <div
+      class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+      role="status"
+    >
+      {{ success() }}
+    </div>
+  }
+
+  <section class="mt-6 grid gap-4 md:grid-cols-3">
+    <article class="rounded-2xl border border-blue-100 bg-blue-50 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">
+        Total Customers
+      </p>
+
+      <p class="mt-2 text-3xl font-bold text-blue-950">
+        {{ customers().length }}
+      </p>
+    </article>
+
+    <article class="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+        Active profiles
+      </p>
+
+      <p class="mt-2 text-3xl font-bold text-emerald-950">
+        {{ activeCount() }}
+      </p>
+    </article>
+
+    <article class="rounded-2xl border border-amber-100 bg-amber-50 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">
+        Suspended profiles
+      </p>
+
+      <p class="mt-2 text-3xl font-bold text-amber-950">
+        {{ suspendedCount() }}
+      </p>
+    </article>
+  </section>
+
+  <section
+    class="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+  >
+    <div class="grid gap-4 md:grid-cols-[1fr_220px_auto]">
+      <label>
+        <span class="text-sm font-semibold text-slate-700">
+          Search Customers
+        </span>
+
+        <input
+          type="search"
+          class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+          placeholder="Name, email, phone, Customer ID, or user ID"
+          [ngModel]="searchText()"
+          (ngModelChange)="updateSearch($event)"
+        />
+      </label>
+
+      <label>
+        <span class="text-sm font-semibold text-slate-700">
+          Status
+        </span>
+
+        <select
+          class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="updateStatusFilter($event)"
+        >
+          @for (status of statusOptions; track status) {
+            <option [value]="status">
+              {{ status === 'ALL' ? 'All statuses' : formatLabel(status) }}
+            </option>
+          }
+        </select>
+      </label>
+
+      <button
+        type="button"
+        class="self-end rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        (click)="clearFilters()"
+      >
+        Clear filters
+      </button>
+    </div>
+  </section>
+
+  @if (loading()) {
+    <div
+      class="mt-6 h-96 animate-pulse rounded-3xl border border-slate-200 bg-white"
+    ></div>
+  } @else if (filteredCustomers().length === 0) {
+    <section
+      class="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center"
+    >
+      <h2 class="text-xl font-semibold text-slate-900">
+        No Customers found
+      </h2>
+
+      <p class="mt-2 text-sm text-slate-500">
+        No Customer profiles match the current filters.
+      </p>
+    </section>
+  } @else {
+    <div class="mt-6 grid gap-5 lg:grid-cols-2">
+      @for (
+        customer of filteredCustomers();
+        track customer.customerId
+      ) {
+        <article
+          class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Customer {{ customer.customerId }}
+              </p>
+
+              <h2 class="mt-2 text-xl font-bold text-slate-900">
+                {{ customer.fullName }}
+              </h2>
+
+              <p class="mt-1 text-sm text-slate-500">
+                Identity user {{ customer.userId }}
+              </p>
+            </div>
+
+            <span
+              class="rounded-full px-3 py-1 text-xs font-semibold"
+              [class.bg-emerald-100]="customer.status === 'ACTIVE'"
+              [class.text-emerald-700]="customer.status === 'ACTIVE'"
+              [class.bg-amber-100]="customer.status === 'SUSPENDED'"
+              [class.text-amber-800]="customer.status === 'SUSPENDED'"
+            >
+              {{ formatLabel(customer.status) }}
+            </span>
+          </div>
+
+          <dl class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs font-semibold uppercase text-slate-500">
+                Email
+              </dt>
+
+              <dd class="mt-2 break-all text-sm font-semibold text-slate-900">
+                {{ customer.email }}
+              </dd>
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <dt class="text-xs font-semibold uppercase text-slate-500">
+                Phone
+              </dt>
+
+              <dd class="mt-2 text-sm font-semibold text-slate-900">
+                {{ customer.phone }}
+              </dd>
+            </div>
+          </dl>
+
+          <div class="mt-5 flex justify-end">
+            <button
+              type="button"
+              class="rounded-xl border px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:bg-slate-100"
+              [class.border-red-300]="customer.status === 'ACTIVE'"
+              [class.text-red-700]="customer.status === 'ACTIVE'"
+              [class.hover:bg-red-50]="customer.status === 'ACTIVE'"
+              [class.border-emerald-300]="customer.status === 'SUSPENDED'"
+              [class.text-emerald-700]="customer.status === 'SUSPENDED'"
+              [class.hover:bg-emerald-50]="customer.status === 'SUSPENDED'"
+              [disabled]="updatingCustomerId() === customer.customerId"
+              (click)="toggleStatus(customer)"
+            >
+              @if (updatingCustomerId() === customer.customerId) {
+                Updating...
+              } @else if (customer.status === 'ACTIVE') {
+                Suspend profile
+              } @else {
+                Activate profile
+              }
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

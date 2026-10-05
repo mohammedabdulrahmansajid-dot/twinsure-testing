@@ -1,0 +1,368 @@
+<section class="mx-auto max-w-5xl">
+  <a
+    routerLink="/admin/insurance-products"
+    class="text-sm font-semibold text-blue-700 hover:text-blue-800"
+  >
+    Back to insurance products
+  </a>
+
+  <header class="mt-5">
+    <p
+      class="text-sm font-semibold uppercase tracking-widest text-blue-700"
+    >
+      Product administration
+    </p>
+
+    <h1
+      class="mt-2 text-3xl font-bold tracking-tight text-slate-900"
+    >
+      Create Insurance Product
+    </h1>
+
+    <p
+      class="mt-2 max-w-3xl text-sm leading-6 text-slate-600"
+    >
+      Define the product identity and default financial terms.
+      Coverage rules and exclusions can be configured after the
+      product has been created.
+    </p>
+  </header>
+
+  @if (error()) {
+    <div
+      class="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      role="alert"
+    >
+      {{ error() }}
+    </div>
+  }
+
+  <form
+    class="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+    [formGroup]="productForm"
+    (ngSubmit)="submit()"
+    novalidate
+  >
+    <section>
+      <div
+        class="border-b border-slate-200 bg-slate-50 px-6 py-5 sm:px-8"
+      >
+        <h2
+          class="text-xl font-semibold text-slate-900"
+        >
+          Product identity
+        </h2>
+
+        <p
+          class="mt-1 text-sm leading-6 text-slate-600"
+        >
+          Product code identifies the plan across TwinSure and
+          cannot be supplied by Customers.
+        </p>
+      </div>
+
+      <div
+        class="grid gap-6 p-6 sm:grid-cols-2 sm:p-8"
+      >
+        <label>
+          <span
+            class="text-sm font-semibold text-slate-700"
+          >
+            Product code
+          </span>
+
+          <input
+            type="text"
+            formControlName="productCode"
+            autocomplete="off"
+            maxlength="50"
+            class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 uppercase outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            placeholder="Example: TWIN-PROTECT"
+            [class.border-red-400]="
+              controlInvalid('productCode')
+            "
+          />
+
+          <p
+            class="mt-2 text-xs leading-5 text-slate-500"
+          >
+            Use 3 to 50 characters. The code is converted to
+            uppercase before submission.
+          </p>
+
+          @if (
+            controlInvalid('productCode')
+          ) {
+            <p
+              class="mt-2 text-sm text-red-600"
+            >
+              Product code must contain 3 to 50 characters.
+            </p>
+          }
+        </label>
+
+        <label>
+          <span
+            class="text-sm font-semibold text-slate-700"
+          >
+            Product name
+          </span>
+
+          <input
+            type="text"
+            formControlName="productName"
+            autocomplete="off"
+            maxlength="150"
+            class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            placeholder="Example: Twin Protection Plus"
+            [class.border-red-400]="
+              controlInvalid('productName')
+            "
+          />
+
+          @if (
+            controlInvalid('productName')
+          ) {
+            <p
+              class="mt-2 text-sm text-red-600"
+            >
+              Product name must contain 3 to 150 characters.
+            </p>
+          }
+        </label>
+
+        <label class="sm:col-span-2">
+          <span
+            class="text-sm font-semibold text-slate-700"
+          >
+            Description
+          </span>
+
+          <textarea
+            rows="5"
+            formControlName="description"
+            maxlength="500"
+            class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            placeholder="Describe the insurance protection and intended Customer use."
+            [class.border-red-400]="
+              controlInvalid('description')
+            "
+          ></textarea>
+
+          <div
+            class="mt-2 flex items-start justify-between gap-4"
+          >
+            <span
+              class="text-xs leading-5 text-slate-500"
+            >
+              Description must contain 10 to 500 characters.
+            </span>
+
+            <span
+              class="text-xs text-slate-500"
+            >
+              {{ descriptionLength() }}/500
+            </span>
+          </div>
+
+          @if (
+            controlInvalid('description')
+          ) {
+            <p
+              class="mt-2 text-sm text-red-600"
+            >
+              Enter a description containing 10 to 500 characters.
+            </p>
+          }
+        </label>
+      </div>
+    </section>
+
+    <section>
+      <div
+        class="border-y border-slate-200 bg-slate-50 px-6 py-5 sm:px-8"
+      >
+        <h2
+          class="text-xl font-semibold text-slate-900"
+        >
+          Financial terms
+        </h2>
+
+        <p
+          class="mt-1 text-sm leading-6 text-slate-600"
+        >
+          These values establish the product-level premium,
+          maximum coverage, and deductible.
+        </p>
+      </div>
+
+      <div
+        class="grid gap-6 p-6 md:grid-cols-3 sm:p-8"
+      >
+        <label>
+          <span
+            class="text-sm font-semibold text-slate-700"
+          >
+            Base premium
+          </span>
+
+          <div class="relative mt-2">
+            <span
+              class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 font-semibold text-slate-500"
+              aria-hidden="true"
+            >
+              ₹
+            </span>
+
+            <input
+              type="number"
+              min="0.01"
+              step="0.01"
+              formControlName="basePremium"
+              class="w-full rounded-xl border border-slate-300 py-3 pl-9 pr-4 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+              [class.border-red-400]="
+                controlInvalid('basePremium')
+              "
+            />
+          </div>
+
+          @if (
+            controlInvalid('basePremium')
+          ) {
+            <p
+              class="mt-2 text-sm text-red-600"
+            >
+              Base premium must be greater than zero.
+            </p>
+          }
+        </label>
+
+        <label>
+          <span
+            class="text-sm font-semibold text-slate-700"
+          >
+            Coverage limit
+          </span>
+
+          <div class="relative mt-2">
+            <span
+              class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 font-semibold text-slate-500"
+              aria-hidden="true"
+            >
+              ₹
+            </span>
+
+            <input
+              type="number"
+              min="0.01"
+              step="0.01"
+              formControlName="coverageLimit"
+              class="w-full rounded-xl border border-slate-300 py-3 pl-9 pr-4 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+              [class.border-red-400]="
+                controlInvalid('coverageLimit')
+              "
+            />
+          </div>
+
+          @if (
+            controlInvalid('coverageLimit')
+          ) {
+            <p
+              class="mt-2 text-sm text-red-600"
+            >
+              Coverage limit must be greater than zero.
+            </p>
+          }
+        </label>
+
+        <label>
+          <span
+            class="text-sm font-semibold text-slate-700"
+          >
+            Deductible
+          </span>
+
+          <div class="relative mt-2">
+            <span
+              class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 font-semibold text-slate-500"
+              aria-hidden="true"
+            >
+              ₹
+            </span>
+
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              formControlName="deductible"
+              class="w-full rounded-xl border border-slate-300 py-3 pl-9 pr-4 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+              [class.border-red-400]="
+                controlInvalid('deductible')
+                || deductibleExceedsCoverage()
+              "
+            />
+          </div>
+
+          @if (
+            controlInvalid('deductible')
+          ) {
+            <p
+              class="mt-2 text-sm text-red-600"
+            >
+              Deductible cannot be negative.
+            </p>
+          } @else if (
+            deductibleExceedsCoverage()
+          ) {
+            <p
+              class="mt-2 text-sm text-red-600"
+            >
+              Deductible cannot exceed the coverage limit.
+            </p>
+          }
+        </label>
+      </div>
+    </section>
+
+    <section
+      class="border-t border-slate-200 bg-blue-50 px-6 py-5 sm:px-8"
+    >
+      <h2
+        class="text-sm font-semibold text-blue-950"
+      >
+        Initial status: Draft
+      </h2>
+
+      <p
+        class="mt-2 text-sm leading-6 text-blue-800"
+      >
+        The product is created as a Draft. Add at least one coverage
+        rule, review exclusions, and then change the product status to
+        Active when the plan is ready for Customers.
+      </p>
+    </section>
+
+    <div
+      class="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50 px-6 py-5 sm:flex-row sm:justify-end sm:px-8"
+    >
+      <a
+        routerLink="/admin/insurance-products"
+        class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+      >
+        Cancel
+      </a>
+
+      <button
+        type="submit"
+        class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+        [disabled]="submitting()"
+      >
+        {{
+          submitting()
+            ? 'Creating product...'
+            : 'Create product'
+        }}
+      </button>
+    </div>
+  </form>
+</section>

@@ -1,0 +1,57 @@
+<section class="mx-auto max-w-7xl">
+  <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-widest text-blue-700">AI action evaluation</p>
+      <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">Action History</h1>
+      <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Review actions simulated for your AI Twins and inspect compliance, insurance, and violation results.</p>
+    </div>
+    <a routerLink="/customer/ai-actions/simulate" class="inline-flex items-center justify-center rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-800">Simulate action</a>
+  </header>
+
+  @if (error()) {
+    <div class="mt-6 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+      <span>{{ error() }}</span>
+      <button type="button" class="font-semibold underline" (click)="loadActions()">Try again</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="mt-6 space-y-4">
+      @for (item of loadingItems; track item) {
+        <article class="h-52 animate-pulse rounded-3xl border border-slate-200 bg-white shadow-sm"></article>
+      }
+    </div>
+  } @else if (actions().length === 0) {
+    <div class="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
+      <h2 class="text-xl font-semibold text-slate-900">No AI actions evaluated</h2>
+      <p class="mt-2 text-sm text-slate-600">Simulate an action performed by an AI Twin to begin evaluation.</p>
+      <a routerLink="/customer/ai-actions/simulate" class="mt-6 inline-flex rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white">Simulate action</a>
+    </div>
+  } @else {
+    <div class="mt-6 space-y-4">
+      @for (action of actions(); track action.actionId) {
+        <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200 hover:shadow-md">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Action {{ action.actionId }} · Twin {{ action.twinId }}</p>
+              <h2 class="mt-2 text-xl font-bold text-slate-900">{{ formatLabel(action.actionType) }}</h2>
+              <p class="mt-1 text-sm text-slate-500">{{ action.transactionReference }}</p>
+            </div>
+            <span class="w-fit rounded-full px-3 py-1 text-xs font-semibold" [class.bg-emerald-100]="action.actionStatus === 'COMPLIANT'" [class.text-emerald-700]="action.actionStatus === 'COMPLIANT'" [class.bg-red-100]="action.actionStatus === 'VIOLATION_DETECTED'" [class.text-red-700]="action.actionStatus === 'VIOLATION_DETECTED'" [class.bg-amber-100]="action.actionStatus === 'EVALUATION_FAILED'" [class.text-amber-800]="action.actionStatus === 'EVALUATION_FAILED'">{{ formatLabel(action.actionStatus) }}</span>
+          </div>
+
+          <dl class="mt-6 grid gap-3 sm:grid-cols-4">
+            <div class="rounded-2xl bg-slate-50 p-4"><dt class="text-xs uppercase text-slate-500">Amount</dt><dd class="mt-2 font-semibold">{{ action.actionAmount === null ? 'Not provided' : (action.actionAmount | currency:'INR':'symbol':'1.2-2') }}</dd></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><dt class="text-xs uppercase text-slate-500">Approval</dt><dd class="mt-2 font-semibold">{{ action.approvalProvided ? 'Provided' : 'Not provided' }}</dd></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><dt class="text-xs uppercase text-slate-500">Insurance</dt><dd class="mt-2 font-semibold">{{ action.insured ? 'Insured' : 'Uninsured' }}</dd></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><dt class="text-xs uppercase text-slate-500">Occurred</dt><dd class="mt-2 font-semibold">{{ action.occurredAt | date:'medium' }}</dd></div>
+          </dl>
+
+          <div class="mt-6 flex justify-end">
+            <a [routerLink]="['/customer/ai-actions', action.actionId]" class="inline-flex rounded-xl border border-blue-300 px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50">View evaluation</a>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

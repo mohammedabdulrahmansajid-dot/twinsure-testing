@@ -1,0 +1,326 @@
+<section class="mx-auto max-w-6xl">
+  <header>
+    <a
+      routerLink="/customer/policy-applications"
+      class="text-sm font-semibold text-blue-700 hover:text-blue-800"
+    >
+      Back to applications
+    </a>
+
+    <p class="mt-5 text-sm font-semibold uppercase tracking-widest text-blue-700">
+      Application review
+    </p>
+
+    <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+      Policy Application
+      {{ application()?.applicationId }}
+    </h1>
+  </header>
+
+  @if (error()) {
+    <div
+      class="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      role="alert"
+    >
+      {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="mt-6 animate-pulse rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div class="h-7 w-56 rounded bg-slate-200"></div>
+
+      <div class="mt-6 grid gap-4 sm:grid-cols-3">
+        <div class="h-24 rounded-2xl bg-slate-100"></div>
+
+        <div class="h-24 rounded-2xl bg-slate-100"></div>
+
+        <div class="h-24 rounded-2xl bg-slate-100"></div>
+      </div>
+    </div>
+  } @else if (details()) {
+    <article class="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div
+        class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 px-6 py-5 sm:px-8"
+      >
+        <div>
+          <h2 class="text-xl font-semibold text-slate-900">
+            {{ product()?.productName }}
+          </h2>
+
+          <p class="mt-1 text-sm text-slate-500">
+            {{ product()?.productCode }}
+            · AI Twin
+            {{ application()?.twinId }}
+          </p>
+        </div>
+
+        <span
+          class="rounded-full px-3 py-1 text-xs font-semibold"
+          [class.bg-blue-100]="application()?.status === 'PENDING_REVIEW'"
+          [class.text-blue-700]="application()?.status === 'PENDING_REVIEW'"
+          [class.bg-amber-100]="application()?.status === 'CHANGES_REQUIRED'"
+          [class.text-amber-800]="application()?.status === 'CHANGES_REQUIRED'"
+          [class.bg-emerald-100]="
+            application()?.status === 'APPROVED' || application()?.status === 'ACCEPTED'
+          "
+          [class.text-emerald-700]="
+            application()?.status === 'APPROVED' || application()?.status === 'ACCEPTED'
+          "
+          [class.bg-red-100]="application()?.status === 'REJECTED'"
+          [class.text-red-700]="application()?.status === 'REJECTED'"
+          [class.bg-slate-200]="application()?.status === 'DECLINED'"
+          [class.text-slate-700]="application()?.status === 'DECLINED'"
+        >
+          {{ formatLabel(application()!.status) }}
+        </span>
+      </div>
+
+      <dl class="grid gap-0 sm:grid-cols-3">
+        <div class="border-b border-slate-200 p-6 sm:px-8">
+          <dt class="text-sm text-slate-500">Submitted</dt>
+
+          <dd class="mt-2 font-semibold text-slate-900">
+            {{ application()?.submittedAt | date: 'medium' }}
+          </dd>
+        </div>
+
+        <div class="border-b border-slate-200 p-6 sm:border-l sm:px-8">
+          <dt class="text-sm text-slate-500">Reviewed</dt>
+
+          <dd class="mt-2 font-semibold text-slate-900">
+            {{
+              application()?.reviewedAt
+                ? (application()?.reviewedAt | date: 'medium')
+                : 'Not yet reviewed'
+            }}
+          </dd>
+        </div>
+
+        <div class="border-b border-slate-200 p-6 sm:border-l sm:px-8">
+          <dt class="text-sm text-slate-500">Proposal expires</dt>
+
+          <dd class="mt-2 font-semibold text-slate-900">
+            {{
+              application()?.proposalExpiresAt
+                ? (application()?.proposalExpiresAt | date: 'medium')
+                : 'Not applicable'
+            }}
+          </dd>
+        </div>
+      </dl>
+    </article>
+
+    @if (application()?.decisionReason) {
+      <section class="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 class="font-semibold text-slate-900">Underwriter decision</h2>
+
+        <p class="mt-2 text-sm leading-6 text-slate-600">
+          {{ application()?.decisionReason }}
+        </p>
+      </section>
+    }
+
+    @if (application()?.status === 'PENDING_REVIEW') {
+      <section class="mt-6 rounded-2xl border border-blue-200 bg-blue-50 p-6">
+        <h2 class="font-semibold text-blue-950">Awaiting Underwriter review</h2>
+
+        <p class="mt-2 text-sm leading-6 text-blue-800">
+          This application is waiting for assessment and an underwriting decision.
+        </p>
+      </section>
+    }
+
+    @if (application()?.status === 'CHANGES_REQUIRED') {
+      <section class="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-6 sm:p-8">
+        <h2 class="text-xl font-semibold text-amber-950">Changes required</h2>
+
+        <p class="mt-2 text-sm leading-6 text-amber-800">
+          Update the selected AI Twin according to the Underwriter's explanation, then resubmit this
+          same application for another review.
+        </p>
+
+        <div class="mt-5 flex flex-wrap gap-3">
+          <a
+            [routerLink]="['/customer/ai-twins', application()!.twinId]"
+            class="rounded-xl border border-amber-300 bg-white px-4 py-2.5 text-sm font-semibold text-amber-800 hover:bg-amber-100"
+          >
+            Update AI Twin
+          </a>
+
+          <button
+            type="button"
+            class="rounded-xl bg-amber-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            [disabled]="saving()"
+            (click)="resubmitApplication()"
+          >
+            {{ saving() ? 'Resubmitting...' : 'Resubmit application' }}
+          </button>
+        </div>
+
+        <p class="mt-4 text-xs leading-5 text-amber-700">
+          Resubmitting reuses this application. A duplicate application will not be created.
+        </p>
+      </section>
+    }
+
+    @if (application()?.status === 'APPROVED') {
+      <section class="mt-6 rounded-3xl border border-emerald-200 bg-emerald-50 p-6 sm:p-8">
+        <h2 class="text-xl font-semibold text-emerald-950">Approved proposal</h2>
+
+        <p class="mt-2 text-sm leading-6 text-emerald-800">
+          Review the final policy terms before accepting or declining the proposal.
+        </p>
+
+        <dl class="mt-5 grid gap-3 sm:grid-cols-3">
+          <div class="rounded-2xl bg-white p-4">
+            <dt class="text-xs uppercase text-slate-500">Premium</dt>
+
+            <dd class="mt-2 font-bold text-slate-900">
+              {{ application()?.proposedPremium | currency: 'INR' : 'symbol' : '1.2-2' }}
+            </dd>
+          </div>
+
+          <div class="rounded-2xl bg-white p-4">
+            <dt class="text-xs uppercase text-slate-500">Coverage</dt>
+
+            <dd class="mt-2 font-bold text-slate-900">
+              {{ application()?.proposedCoverageLimit | currency: 'INR' : 'symbol' : '1.2-2' }}
+            </dd>
+          </div>
+
+          <div class="rounded-2xl bg-white p-4">
+            <dt class="text-xs uppercase text-slate-500">Deductible</dt>
+
+            <dd class="mt-2 font-bold text-slate-900">
+              {{ application()?.proposedDeductible | currency: 'INR' : 'symbol' : '1.2-2' }}
+            </dd>
+          </div>
+        </dl>
+
+        <div class="mt-6 flex flex-wrap justify-end gap-3">
+          <button
+            type="button"
+            class="rounded-xl border border-red-300 bg-white px-5 py-3 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+            [disabled]="saving()"
+            (click)="showDeclineConfirmation()"
+          >
+            Decline proposal
+          </button>
+
+          <button
+            type="button"
+            class="rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            [disabled]="saving()"
+            (click)="acceptProposal()"
+          >
+            {{ saving() ? 'Processing...' : 'Accept proposal' }}
+          </button>
+        </div>
+      </section>
+    }
+
+    @if (application()?.status === 'APPROVED' && declineConfirmationVisible()) {
+      <section class="mt-6 rounded-3xl border border-red-200 bg-red-50 p-6">
+        <h2 class="text-xl font-semibold text-red-950">Decline this proposal?</h2>
+
+        <p class="mt-2 text-sm leading-6 text-red-800">
+          Declining closes this insurance offer. No policy will be issued from this application, but
+          the proposal will remain in application history for reference.
+        </p>
+
+        <div class="mt-5 flex justify-end gap-3">
+          <button
+            type="button"
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            [disabled]="saving()"
+            (click)="hideDeclineConfirmation()"
+          >
+            Keep proposal
+          </button>
+
+          <button
+            type="button"
+            class="rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-800 disabled:bg-slate-400"
+            [disabled]="saving()"
+            (click)="declineProposal()"
+          >
+            {{ saving() ? 'Declining...' : 'Confirm decline' }}
+          </button>
+        </div>
+      </section>
+    }
+
+    @if (application()?.status === 'ACCEPTED') {
+      <section class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
+        <h2 class="font-semibold text-emerald-950">Proposal accepted</h2>
+
+        <p class="mt-2 text-sm leading-6 text-emerald-800">
+          This proposal was accepted and an insurance policy was issued for the selected AI Twin.
+        </p>
+
+        <a
+          routerLink="/customer/policies"
+          class="mt-4 inline-flex rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800"
+        >
+          View my policies
+        </a>
+      </section>
+    }
+
+    @if (application()?.status === 'DECLINED') {
+      <section class="mt-6 rounded-3xl border border-slate-300 bg-slate-50 p-6">
+        <h2 class="text-xl font-semibold text-slate-900">Proposal declined</h2>
+
+        <p class="mt-2 text-sm leading-6 text-slate-600">
+          This offer was declined and no insurance policy was issued. The offered terms remain
+          visible for reference.
+        </p>
+
+        <dl class="mt-5 grid gap-3 sm:grid-cols-3">
+          <div class="rounded-2xl bg-white p-4">
+            <dt class="text-xs uppercase text-slate-500">Offered premium</dt>
+
+            <dd class="mt-2 font-bold text-slate-900">
+              {{ application()?.proposedPremium | currency: 'INR' : 'symbol' : '1.2-2' }}
+            </dd>
+          </div>
+
+          <div class="rounded-2xl bg-white p-4">
+            <dt class="text-xs uppercase text-slate-500">Offered coverage</dt>
+
+            <dd class="mt-2 font-bold text-slate-900">
+              {{ application()?.proposedCoverageLimit | currency: 'INR' : 'symbol' : '1.2-2' }}
+            </dd>
+          </div>
+
+          <div class="rounded-2xl bg-white p-4">
+            <dt class="text-xs uppercase text-slate-500">Offered deductible</dt>
+
+            <dd class="mt-2 font-bold text-slate-900">
+              {{ application()?.proposedDeductible | currency: 'INR' : 'symbol' : '1.2-2' }}
+            </dd>
+          </div>
+        </dl>
+
+        <a
+          routerLink="/customer/insurance-products"
+          class="mt-5 inline-flex rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
+        >
+          Browse insurance plans
+        </a>
+      </section>
+    }
+
+    @if (application()?.status === 'REJECTED') {
+      <section class="mt-6 rounded-2xl border border-red-200 bg-red-50 p-6">
+        <h2 class="font-semibold text-red-950">Application rejected</h2>
+
+        <p class="mt-2 text-sm leading-6 text-red-800">
+          This application was not approved. Review the Underwriter decision above for more
+          information.
+        </p>
+      </section>
+    }
+  }
+</section>

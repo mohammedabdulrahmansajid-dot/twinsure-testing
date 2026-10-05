@@ -1,0 +1,823 @@
+<section class="mx-auto max-w-6xl">
+  <a
+    routerLink="/customer/policies"
+    class="text-sm font-semibold text-blue-700 hover:text-blue-800"
+  >
+    Back to policies
+  </a>
+
+  @if (error()) {
+    <div
+      class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4"
+      role="alert"
+    >
+      <p class="text-sm text-red-700">
+        {{ error() }}
+      </p>
+
+      <button
+        type="button"
+        class="rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+        (click)="reload()"
+      >
+        Try again
+      </button>
+    </div>
+  }
+
+  @if (loading()) {
+    <section
+      class="mt-6 animate-pulse space-y-5"
+      aria-label="Loading policy contract"
+    >
+      <div
+        class="h-52 rounded-3xl border border-slate-200 bg-white"
+      ></div>
+
+      <div class="grid gap-5 lg:grid-cols-2">
+        <div
+          class="h-72 rounded-3xl border border-slate-200 bg-white"
+        ></div>
+
+        <div
+          class="h-72 rounded-3xl border border-slate-200 bg-white"
+        ></div>
+      </div>
+    </section>
+  } @else if (policy()) {
+    <header
+      class="mt-5 overflow-hidden rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white shadow-sm"
+    >
+      <div
+        class="flex flex-wrap items-start justify-between gap-5 p-6 sm:p-8"
+      >
+        <div>
+          <p
+            class="text-sm font-semibold uppercase tracking-widest text-blue-700"
+          >
+            Issued policy
+          </p>
+
+          <h1
+            class="mt-2 text-3xl font-bold tracking-tight text-slate-900"
+          >
+            {{ policy()!.productName }}
+          </h1>
+
+          <p
+            class="mt-2 text-lg font-semibold text-slate-700"
+          >
+            {{ policy()!.policyNumber }}
+          </p>
+
+          <div class="mt-4 flex flex-wrap gap-2">
+            <span
+              class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
+            >
+              {{ policy()!.productCode }}
+            </span>
+
+            <span
+              class="rounded-full px-3 py-1 text-xs font-semibold"
+              [class]="statusClasses(policy()!.status)"
+            >
+              {{ formatLabel(policy()!.status) }}
+            </span>
+          </div>
+        </div>
+
+        <div
+          class="rounded-2xl border border-blue-200 bg-white px-5 py-4"
+        >
+          <p
+            class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+          >
+            Annual premium
+          </p>
+
+          <p
+            class="mt-2 text-2xl font-bold text-slate-900"
+          >
+            {{
+              policy()!.premium
+                | currency:'INR':'symbol':'1.2-2'
+            }}
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="border-t border-blue-100 bg-white/70 px-6 py-5 sm:px-8"
+      >
+        <p
+          class="max-w-4xl text-sm leading-7 text-slate-600"
+        >
+          {{ policy()!.productDescription }}
+        </p>
+      </div>
+    </header>
+
+    <section
+      class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+    >
+      <div>
+        <p
+          class="text-xs font-semibold uppercase tracking-wider text-blue-700"
+        >
+          Contract summary
+        </p>
+
+        <h2
+          class="mt-1 text-xl font-semibold text-slate-900"
+        >
+          Policy terms
+        </h2>
+      </div>
+
+      <dl
+        class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+      >
+        <div
+          class="rounded-2xl border border-blue-100 bg-blue-50 p-5"
+        >
+          <dt
+            class="text-xs font-semibold uppercase tracking-wide text-blue-700"
+          >
+            Overall coverage limit
+          </dt>
+
+          <dd
+            class="mt-2 text-xl font-bold text-blue-950"
+          >
+            {{
+              policy()!.coverageLimit
+                | currency:'INR':'symbol':'1.2-2'
+            }}
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl bg-slate-50 p-5"
+        >
+          <dt
+            class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+          >
+            Deductible
+          </dt>
+
+          <dd
+            class="mt-2 text-xl font-bold text-slate-900"
+          >
+            {{
+              policy()!.deductible
+                | currency:'INR':'symbol':'1.2-2'
+            }}
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl bg-slate-50 p-5"
+        >
+          <dt
+            class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+          >
+            AI Twin
+          </dt>
+
+          <dd
+            class="mt-2 font-semibold text-slate-900"
+          >
+            @if (
+              policy()!.twinSnapshot?.twinName
+            ) {
+              {{ policy()!.twinSnapshot!.twinName }}
+              <span class="text-slate-500">
+                · ID {{ policy()!.twinId }}
+              </span>
+            } @else {
+              AI Twin ID {{ policy()!.twinId }}
+            }
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl bg-slate-50 p-5"
+        >
+          <dt
+            class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+          >
+            Coverage starts
+          </dt>
+
+          <dd
+            class="mt-2 font-semibold text-slate-900"
+          >
+            {{
+              policy()!.startDate
+                | date:'mediumDate'
+            }}
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl bg-slate-50 p-5"
+        >
+          <dt
+            class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+          >
+            Coverage ends
+          </dt>
+
+          <dd
+            class="mt-2 font-semibold text-slate-900"
+          >
+            {{
+              policy()!.endDate
+                | date:'mediumDate'
+            }}
+          </dd>
+        </div>
+
+        <div
+          class="rounded-2xl bg-slate-50 p-5"
+        >
+          <dt
+            class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+          >
+            Application reference
+          </dt>
+
+          <dd
+            class="mt-2 font-semibold text-slate-900"
+          >
+            Application
+            {{ policy()!.applicationId }}
+          </dd>
+        </div>
+      </dl>
+
+      <div
+        class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4"
+      >
+        <p
+          class="text-sm leading-6 text-slate-600"
+        >
+          The overall coverage limit is the maximum policy-level
+          protection. Individual covered events may have a lower
+          per-event limit.
+        </p>
+      </div>
+    </section>
+
+    <section
+      class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+    >
+      <div
+        class="flex flex-wrap items-center justify-between gap-3"
+      >
+        <div>
+          <p
+            class="text-xs font-semibold uppercase tracking-wider text-blue-700"
+          >
+            Insured events
+          </p>
+
+          <h2
+            class="mt-1 text-xl font-semibold text-slate-900"
+          >
+            What this policy covers
+          </h2>
+
+          <p
+            class="mt-2 text-sm leading-6 text-slate-600"
+          >
+            Coverage requires the exact action and violation
+            combination shown below.
+          </p>
+        </div>
+
+        <span
+          class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
+        >
+          {{ policy()!.coverages.length }}
+          covered events
+        </span>
+      </div>
+
+      @if (policy()!.coverages.length === 0) {
+        <div
+          class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5"
+        >
+          <p
+            class="font-semibold text-amber-950"
+          >
+            No active coverage rules
+          </p>
+
+          <p
+            class="mt-2 text-sm text-amber-800"
+          >
+            Contact policy support because this issued policy does
+            not currently expose active covered events.
+          </p>
+        </div>
+      } @else {
+        <div
+          class="mt-6 grid gap-4 lg:grid-cols-2"
+        >
+          @for (
+            coverage of policy()!.coverages;
+            track coverage.coverageId
+          ) {
+            <article
+              class="rounded-2xl border border-slate-200 p-5"
+            >
+              <div
+                class="flex flex-wrap items-start justify-between gap-3"
+              >
+                <div>
+                  <p
+                    class="text-xs font-semibold uppercase tracking-wide text-blue-700"
+                  >
+                    {{
+                      formatLabel(
+                        coverage.actionType
+                      )
+                    }}
+                  </p>
+
+                  <h3
+                    class="mt-1 text-lg font-semibold text-slate-900"
+                  >
+                    {{
+                      formatLabel(
+                        coverage.violationType
+                      )
+                    }}
+                  </h3>
+                </div>
+
+                <div
+                  class="rounded-xl bg-emerald-50 px-3 py-2 text-right"
+                >
+                  <p
+                    class="text-xs font-semibold uppercase tracking-wide text-emerald-700"
+                  >
+                    Per-event limit
+                  </p>
+
+                  <p
+                    class="mt-1 font-bold text-emerald-950"
+                  >
+                    {{
+                      coverageLimit(
+                        coverage.coverageLimit
+                      )
+                        | currency:'INR':'symbol':'1.2-2'
+                    }}
+                  </p>
+                </div>
+              </div>
+
+              <p
+                class="mt-4 text-sm leading-6 text-slate-600"
+              >
+                {{ coverage.description }}
+              </p>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section
+      class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+    >
+      <div>
+        <p
+          class="text-xs font-semibold uppercase tracking-wider text-red-700"
+        >
+          Not insured
+        </p>
+
+        <h2
+          class="mt-1 text-xl font-semibold text-slate-900"
+        >
+          Policy exclusions
+        </h2>
+
+        <p
+          class="mt-2 text-sm leading-6 text-slate-600"
+        >
+          These circumstances are outside the protection provided by
+          this policy.
+        </p>
+      </div>
+
+      @if (policy()!.exclusions.length === 0) {
+        <p
+          class="mt-6 rounded-2xl bg-slate-50 p-5 text-sm text-slate-600"
+        >
+          No active exclusions are listed for this product.
+        </p>
+      } @else {
+        <div class="mt-6 space-y-4">
+          @for (
+            exclusion of policy()!.exclusions;
+            track exclusion.exclusionId
+          ) {
+            <article
+              class="rounded-2xl border border-red-100 bg-red-50 p-5"
+            >
+              <h3
+                class="font-semibold text-red-950"
+              >
+                {{
+                  formatLabel(
+                    exclusion.exclusionCode
+                  )
+                }}
+              </h3>
+
+              <p
+                class="mt-2 text-sm leading-6 text-red-800"
+              >
+                {{ exclusion.description }}
+              </p>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section
+      class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+    >
+      <div>
+        <p
+          class="text-xs font-semibold uppercase tracking-wider text-violet-700"
+        >
+          Underwriting evidence
+        </p>
+
+        <h2
+          class="mt-1 text-xl font-semibold text-slate-900"
+        >
+          Underwritten AI Twin configuration
+        </h2>
+
+        <p
+          class="mt-2 text-sm leading-6 text-slate-600"
+        >
+          This immutable snapshot records the AI Twin risk controls
+          that existed when the policy was issued.
+        </p>
+      </div>
+
+      @if (
+        policy()!.twinSnapshot
+        && policy()!.twinSnapshot!.capturedAt
+        && policy()!.twinSnapshot!.autonomyLevel
+      ) {
+        <dl
+          class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        >
+          <div
+            class="rounded-2xl bg-violet-50 p-5"
+          >
+            <dt
+              class="text-xs font-semibold uppercase tracking-wide text-violet-700"
+            >
+              AI Twin
+            </dt>
+
+            <dd
+              class="mt-2 font-semibold text-violet-950"
+            >
+              {{
+                policy()!.twinSnapshot!.twinName
+                  ?? 'AI Twin '
+                    + policy()!.twinSnapshot!.twinId
+              }}
+            </dd>
+          </div>
+
+          <div
+            class="rounded-2xl bg-slate-50 p-5"
+          >
+            <dt
+              class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+            >
+              Autonomy
+            </dt>
+
+            <dd
+              class="mt-2 font-semibold text-slate-900"
+            >
+              {{
+                formatLabel(
+                  policy()!.twinSnapshot!
+                    .autonomyLevel!
+                )
+              }}
+            </dd>
+          </div>
+
+          <div
+            class="rounded-2xl bg-slate-50 p-5"
+          >
+            <dt
+              class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+            >
+              Transaction limit
+            </dt>
+
+            <dd
+              class="mt-2 font-semibold text-slate-900"
+            >
+              @if (
+                policy()!.twinSnapshot!
+                  .transactionLimit !== null
+              ) {
+                {{
+                  policy()!.twinSnapshot!
+                    .transactionLimit
+                    | currency:'INR':'symbol':'1.2-2'
+                }}
+              } @else {
+                Not available
+              }
+            </dd>
+          </div>
+
+          <div
+            class="rounded-2xl bg-slate-50 p-5"
+          >
+            <dt
+              class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+            >
+              Approval threshold
+            </dt>
+
+            <dd
+              class="mt-2 font-semibold text-slate-900"
+            >
+              @if (
+                policy()!.twinSnapshot!
+                  .approvalThreshold !== null
+              ) {
+                {{
+                  policy()!.twinSnapshot!
+                    .approvalThreshold
+                    | currency:'INR':'symbol':'1.2-2'
+                }}
+              } @else {
+                Not available
+              }
+            </dd>
+          </div>
+        </dl>
+
+        <div
+          class="mt-6 grid gap-4 lg:grid-cols-3"
+        >
+          @for (
+            permission
+              of policy()!.twinSnapshot!
+                .permissions;
+            track permission.actionType
+          ) {
+            <article
+              class="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+            >
+              <div
+                class="flex flex-wrap items-start justify-between gap-3"
+              >
+                <p
+                  class="font-semibold text-slate-900"
+                >
+                  {{
+                    formatLabel(
+                      permission.actionType
+                    )
+                  }}
+                </p>
+
+                <span
+                  class="rounded-full px-2.5 py-1 text-xs font-semibold"
+                  [class.bg-emerald-100]="
+                    permission.active
+                  "
+                  [class.text-emerald-700]="
+                    permission.active
+                  "
+                  [class.bg-slate-200]="
+                    !permission.active
+                  "
+                  [class.text-slate-700]="
+                    !permission.active
+                  "
+                >
+                  {{
+                    permission.active
+                      ? 'Active'
+                      : 'Inactive'
+                  }}
+                </span>
+              </div>
+
+              <p
+                class="mt-3 text-sm text-slate-600"
+              >
+                Permission:
+                <span class="font-semibold">
+                  {{
+                    formatLabel(
+                      permission.permissionLevel
+                    )
+                  }}
+                </span>
+              </p>
+
+              <p
+                class="mt-1 text-sm text-slate-600"
+              >
+                Action limit:
+                @if (
+                  permission.actionLimit !== null
+                ) {
+                  {{
+                    permission.actionLimit
+                      | currency:'INR':'symbol':'1.2-2'
+                  }}
+                } @else {
+                  Not applicable
+                }
+              </p>
+            </article>
+          }
+        </div>
+
+        <p
+          class="mt-5 text-xs text-slate-500"
+        >
+          Snapshot captured:
+          {{
+            policy()!.twinSnapshot!
+              .capturedAt
+              | date:'medium'
+          }}
+        </p>
+      } @else {
+        <div
+          class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5"
+        >
+          <p
+            class="font-semibold text-amber-950"
+          >
+            Historical configuration unavailable
+          </p>
+
+          <p
+            class="mt-2 text-sm leading-6 text-amber-800"
+          >
+            This policy was issued before immutable AI Twin
+            configuration snapshots were introduced. Current policy
+            terms and covered events remain available above.
+          </p>
+        </div>
+      }
+    </section>
+
+    <section
+      class="mt-6 rounded-3xl border border-blue-200 bg-blue-50 p-6 sm:p-8"
+    >
+      <p
+        class="text-xs font-semibold uppercase tracking-wider text-blue-700"
+      >
+        Compensation guide
+      </p>
+
+      <h2
+        class="mt-1 text-xl font-semibold text-blue-950"
+      >
+        How claim compensation is calculated
+      </h2>
+
+      <div
+        class="mt-6 grid gap-3 md:grid-cols-4"
+      >
+        <div
+          class="rounded-2xl border border-blue-200 bg-white p-4"
+        >
+          <p
+            class="text-xs font-semibold uppercase tracking-wide text-blue-700"
+          >
+            Step 1
+          </p>
+
+          <p
+            class="mt-2 text-sm font-semibold text-slate-900"
+          >
+            Verify the eligible covered loss
+          </p>
+        </div>
+
+        <div
+          class="rounded-2xl border border-blue-200 bg-white p-4"
+        >
+          <p
+            class="text-xs font-semibold uppercase tracking-wide text-blue-700"
+          >
+            Step 2
+          </p>
+
+          <p
+            class="mt-2 text-sm font-semibold text-slate-900"
+          >
+            Apply the per-event and overall limits
+          </p>
+        </div>
+
+        <div
+          class="rounded-2xl border border-blue-200 bg-white p-4"
+        >
+          <p
+            class="text-xs font-semibold uppercase tracking-wide text-blue-700"
+          >
+            Step 3
+          </p>
+
+          <p
+            class="mt-2 text-sm font-semibold text-slate-900"
+          >
+            Subtract the policy deductible
+          </p>
+        </div>
+
+        <div
+          class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"
+        >
+          <p
+            class="text-xs font-semibold uppercase tracking-wide text-emerald-700"
+          >
+            Result
+          </p>
+
+          <p
+            class="mt-2 text-sm font-semibold text-emerald-950"
+          >
+            Final maximum payable amount
+          </p>
+        </div>
+      </div>
+
+      <p
+        class="mt-5 text-sm leading-6 text-blue-900"
+      >
+        The deductible is applied after the eligible loss is limited
+        by the covered-event limit and overall policy limit.
+      </p>
+    </section>
+
+    @if (policy()!.cancellationReason) {
+      <section
+        class="mt-6 rounded-3xl border border-red-200 bg-red-50 p-6"
+      >
+        <h2
+          class="font-semibold text-red-950"
+        >
+          Policy cancellation information
+        </h2>
+
+        <p
+          class="mt-2 text-sm leading-6 text-red-800"
+        >
+          {{ policy()!.cancellationReason }}
+        </p>
+      </section>
+    }
+
+    <footer
+      class="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-500"
+    >
+      <span>
+        Policy ID:
+        {{ policy()!.policyId }}
+      </span>
+
+      <span>
+        Product ID:
+        {{ policy()!.productId }}
+      </span>
+
+      <span>
+        Last updated:
+        {{
+          policy()!.updatedAt
+            | date:'medium'
+        }}
+      </span>
+    </footer>
+  }
+</section>

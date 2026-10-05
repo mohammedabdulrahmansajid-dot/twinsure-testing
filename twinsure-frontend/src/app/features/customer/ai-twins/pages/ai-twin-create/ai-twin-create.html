@@ -1,0 +1,251 @@
+<section class="mx-auto max-w-5xl">
+  <header class="flex flex-col gap-3">
+    <a
+      routerLink="/customer/ai-twins"
+      class="inline-flex w-fit items-center text-sm font-semibold text-blue-700 hover:text-blue-800"
+    >
+      Back to AI Twins
+    </a>
+
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-widest text-blue-700">
+        AI Twin registration
+      </p>
+
+      <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+        Register an AI Twin
+      </h1>
+
+      <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+        Record the AI Twin identity, autonomy level, transaction limit, and
+        approval control used by TwinSure insurance and action workflows.
+      </p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div
+      class="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+      role="alert"
+    >
+      {{ error() }}
+    </div>
+  }
+
+  <form
+    class="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+    [formGroup]="aiTwinForm"
+    (ngSubmit)="submit()"
+    novalidate
+  >
+    <div class="border-b border-slate-200 bg-slate-50 px-6 py-5 sm:px-8">
+      <h2 class="text-xl font-semibold text-slate-900">
+        AI Twin identity
+      </h2>
+
+      <p class="mt-1 text-sm leading-6 text-slate-600">
+        Twin name, provider, and model identify this registration and cannot be
+        changed through the Customer configuration update later.
+      </p>
+    </div>
+
+    <div class="grid gap-6 p-6 sm:grid-cols-2 sm:p-8">
+      <div class="sm:col-span-2">
+        <label for="twinName" class="block text-sm font-semibold text-slate-700">
+          Twin name
+        </label>
+
+        <input
+          id="twinName"
+          type="text"
+          formControlName="twinName"
+          class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+          [class.border-red-400]="controlInvalid('twinName')"
+          placeholder="Example: Nova Assistant"
+        />
+
+        @if (controlInvalid('twinName')) {
+          <p class="mt-2 text-sm text-red-600">
+            Twin name must contain 2 to 100 characters.
+          </p>
+        }
+      </div>
+
+      <div>
+        <label for="providerName" class="block text-sm font-semibold text-slate-700">
+          Provider name
+        </label>
+
+        <input
+          id="providerName"
+          type="text"
+          formControlName="providerName"
+          class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+          [class.border-red-400]="controlInvalid('providerName')"
+          placeholder="Example: Contoso AI"
+        />
+
+        @if (controlInvalid('providerName')) {
+          <p class="mt-2 text-sm text-red-600">
+            Provider name must contain 2 to 100 characters.
+          </p>
+        }
+      </div>
+
+      <div>
+        <label for="modelName" class="block text-sm font-semibold text-slate-700">
+          Model name
+        </label>
+
+        <input
+          id="modelName"
+          type="text"
+          formControlName="modelName"
+          class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+          [class.border-red-400]="controlInvalid('modelName')"
+          placeholder="Example: Agent Pro 2"
+        />
+
+        @if (controlInvalid('modelName')) {
+          <p class="mt-2 text-sm text-red-600">
+            Model name must contain 2 to 100 characters.
+          </p>
+        }
+      </div>
+    </div>
+
+    <div class="border-y border-slate-200 bg-slate-50 px-6 py-5 sm:px-8">
+      <h2 class="text-xl font-semibold text-slate-900">
+        Control configuration
+      </h2>
+
+      <p class="mt-1 text-sm leading-6 text-slate-600">
+        These settings influence underwriting risk and determine when Customer
+        approval is required.
+      </p>
+    </div>
+
+    <div class="grid gap-6 p-6 sm:grid-cols-2 sm:p-8">
+      <div class="sm:col-span-2">
+        <label for="autonomyLevel" class="block text-sm font-semibold text-slate-700">
+          Autonomy level
+        </label>
+
+        <select
+          id="autonomyLevel"
+          formControlName="autonomyLevel"
+          class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+          [class.border-red-400]="controlInvalid('autonomyLevel')"
+        >
+          <option value="" disabled>Select an autonomy level</option>
+
+          @for (option of autonomyOptions; track option.value) {
+            <option [value]="option.value">
+              {{ option.label }}
+            </option>
+          }
+        </select>
+
+        @if (controlInvalid('autonomyLevel')) {
+          <p class="mt-2 text-sm text-red-600">
+            Select an autonomy level.
+          </p>
+        }
+      </div>
+
+      <div>
+        <label for="transactionLimit" class="block text-sm font-semibold text-slate-700">
+          Transaction limit
+        </label>
+
+        <div class="relative mt-2">
+          <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-500">
+            ₹
+          </span>
+
+          <input
+            id="transactionLimit"
+            type="number"
+            min="0.01"
+            step="0.01"
+            formControlName="transactionLimit"
+            class="w-full rounded-xl border border-slate-300 bg-white py-3 pl-9 pr-4 text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            [class.border-red-400]="controlInvalid('transactionLimit')"
+            placeholder="10000.00"
+          />
+        </div>
+
+        @if (controlInvalid('transactionLimit')) {
+          <p class="mt-2 text-sm text-red-600">
+            Transaction limit must be greater than zero.
+          </p>
+        }
+      </div>
+
+      <div>
+        <label for="approvalThreshold" class="block text-sm font-semibold text-slate-700">
+          Approval threshold
+        </label>
+
+        <div class="relative mt-2">
+          <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-500">
+            ₹
+          </span>
+
+          <input
+            id="approvalThreshold"
+            type="number"
+            min="0"
+            step="0.01"
+            formControlName="approvalThreshold"
+            class="w-full rounded-xl border border-slate-300 bg-white py-3 pl-9 pr-4 text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            [class.border-red-400]="controlInvalid('approvalThreshold') || thresholdExceedsLimit"
+            placeholder="5000.00"
+          />
+        </div>
+
+        @if (controlInvalid('approvalThreshold')) {
+          <p class="mt-2 text-sm text-red-600">
+            Approval threshold cannot be negative.
+          </p>
+        } @else if (thresholdExceedsLimit) {
+          <p class="mt-2 text-sm text-red-600">
+            Approval threshold cannot exceed the transaction limit.
+          </p>
+        }
+      </div>
+
+      <div class="sm:col-span-2 rounded-2xl border border-blue-100 bg-blue-50 p-5">
+        <p class="text-sm font-semibold text-blue-900">
+          Financial-control rule
+        </p>
+
+        <p class="mt-2 text-sm leading-6 text-blue-800">
+          Transactions above the approval threshold require Customer approval,
+          while no transaction may exceed the transaction limit.
+        </p>
+      </div>
+    </div>
+
+    <div class="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50 px-6 py-5 sm:flex-row sm:justify-end sm:px-8">
+      <a
+        routerLink="/customer/ai-twins"
+        class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+      >
+        Cancel
+      </a>
+
+      <button
+        type="submit"
+        class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+        [disabled]="saving()"
+      >
+        @if (saving()) {
+          Registering...
+        } @else {
+          Register AI Twin
+        }
+      </button>
+    </div>
+  </form>
+</section>
