@@ -35,7 +35,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
+import org.springframework.web.reactive.function.client.WebClient;
 class ClaimServiceTest {
 
     private ClaimRepo claimRepo;
@@ -43,6 +43,7 @@ class ClaimServiceTest {
     private ClaimDocumentRepo documentRepo;
     private ClaimDecisionRepo decisionRepo;
     private ClaimService claimService;
+    private WebClient.Builder webClientBuilder;
 
     @BeforeEach
     void setUp() {
@@ -67,12 +68,19 @@ class ClaimServiceTest {
                         ClaimDecisionRepo.class
                 );
 
+        webClientBuilder =
+                Mockito.mock(
+                        WebClient.Builder.class,
+                        Mockito.RETURNS_DEEP_STUBS
+                );
+
         claimService =
                 new ClaimService(
                         claimRepo,
                         incidentRepo,
                         documentRepo,
-                        decisionRepo
+                        decisionRepo,
+                        webClientBuilder
                 );
     }
 

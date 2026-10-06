@@ -127,8 +127,9 @@ public class SecurityConfig {
                                         "/internal/claims/**",
                                         "/internal/incidents/**"
                                 )
-                                .authenticated()
 
+                                .authenticated()
+                                .pathMatchers("/h2-console").permitAll()
                                 .anyExchange()
                                 .authenticated()
                 )

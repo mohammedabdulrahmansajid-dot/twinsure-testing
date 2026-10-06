@@ -3,15 +3,12 @@ package org.example.identityservice.controller;
 // Exposes focused user validation to authenticated internal services.
 // Claims Service uses this endpoint before assigning a claim.
 
+import org.example.identityservice.dto.request.CustomerLinkRequestDTO;
 import org.example.identityservice.dto.response.UserRoleValidationResponseDTO;
 import org.example.identityservice.enums.Role;
 import org.example.identityservice.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -25,6 +22,7 @@ public class InternalUserController {
 
         this.userService = userService;
     }
+
 
     @GetMapping("/{userId}/role-validation")
     public Mono<ResponseEntity<UserRoleValidationResponseDTO>>
@@ -43,5 +41,14 @@ public class InternalUserController {
                 .map(
                         ResponseEntity::ok
                 );
+    }
+    @PutMapping("/{userId}/customer-link")
+    public Mono<ResponseEntity<Void>> linkCustomer(
+            @PathVariable Long userId,
+            @RequestBody CustomerLinkRequestDTO request) {
+
+        return userService
+                .linkCustomer(userId, request.customerId())
+                .thenReturn(ResponseEntity.ok().build());
     }
 }

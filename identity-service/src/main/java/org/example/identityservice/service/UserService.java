@@ -373,4 +373,19 @@ public class UserService implements ReactiveUserDetailsService {
                 user.getUpdatedAt()
         );
     }
+
+    public Mono<Void> linkCustomer(
+            Long userId,
+            Long customerId) {
+
+        return userRepo
+                .findById(userId)
+                .flatMap(user -> {
+
+                    user.setCustomerId(customerId);
+
+                    return userRepo.save(user);
+                })
+                .then();
+    }
 }

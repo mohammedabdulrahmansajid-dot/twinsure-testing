@@ -287,24 +287,26 @@ export class AdminClaimList
     );
   }
 
-  updateAdjusterId(
-    claimId: number,
-    value: number | string | null
-  ): void {
+ updateAdjusterId(
+  claimId: number,
+  value: number | string | null
+): void {
 
-    const normalizedValue =
-      value === null
-      || value === ''
-        ? null
-        : Number(value);
+  const normalizedValue =
+    value === null || value === ''
+      ? null
+      : Number(value);
 
-    this.adjusterIds.update(
-      currentValues => ({
-        ...currentValues,
-        normalizedValue
-      })
-    );
-  }
+  this.adjusterIds.update(
+    currentValues => ({
+      ...currentValues,
+      [claimId]: normalizedValue // <-- Fixed: correctly uses the claimId parameter as the key
+    })
+  );
+
+  console.log('Adjuster Map:', this.adjusterIds());
+}
+
 
   assignClaim(
     claim: AdminClaim
